@@ -27,6 +27,7 @@ export interface Activity {
   dressCode: string;
   ageRequirements: string;
   cancellationPolicy: string;
+  timeSlots: string[];
 }
 
 export const activities: Activity[] = [
@@ -66,7 +67,8 @@ export const activities: Activity[] = [
     ],
     dressCode: "Smart casual recommended. Shoulders and knees should be covered.",
     ageRequirements: "Open to all ages. Children under 4 enter free.",
-    cancellationPolicy: "Free cancellation up to 24 hours before the experience"
+    cancellationPolicy: "Free cancellation up to 24 hours before the experience",
+    timeSlots: ["08:00", "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"]
   },
   {
     id: "dubai-desert-safari",
@@ -109,7 +111,8 @@ export const activities: Activity[] = [
     ],
     dressCode: "Comfortable, loose-fitting clothes. Closed-toe shoes recommended.",
     ageRequirements: "Minimum age 3 years. Dune bashing not recommended for pregnant women.",
-    cancellationPolicy: "Free cancellation up to 48 hours before the experience"
+    cancellationPolicy: "Free cancellation up to 48 hours before the experience",
+    timeSlots: ["15:00", "15:30", "16:00"]
   },
   {
     id: "luxury-yacht-cruise",
@@ -151,7 +154,8 @@ export const activities: Activity[] = [
     ],
     dressCode: "Resort casual. Swimwear recommended. Bring sunscreen.",
     ageRequirements: "All ages welcome. Life jackets provided for children.",
-    cancellationPolicy: "Free cancellation up to 72 hours before departure"
+    cancellationPolicy: "Free cancellation up to 72 hours before departure",
+    timeSlots: ["09:00", "11:00", "13:00", "15:00", "17:00", "19:00"]
   },
   {
     id: "dubai-fountain-show",
@@ -191,7 +195,8 @@ export const activities: Activity[] = [
     ],
     dressCode: "Casual attire suitable for outdoor activity.",
     ageRequirements: "Suitable for all ages.",
-    cancellationPolicy: "Free cancellation up to 24 hours before the show"
+    cancellationPolicy: "Free cancellation up to 24 hours before the show",
+    timeSlots: ["18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30"]
   },
   {
     id: "atlantis-aquaventure",
@@ -232,7 +237,131 @@ export const activities: Activity[] = [
     ],
     dressCode: "Swimwear required for water attractions. Cover-ups for dining areas.",
     ageRequirements: "Height restrictions apply for certain slides. Children under 3 free.",
-    cancellationPolicy: "Free cancellation up to 24 hours before visit"
+    cancellationPolicy: "Free cancellation up to 24 hours before visit",
+    timeSlots: ["10:00", "10:30", "11:00", "11:30", "12:00"]
+  }
+];
+
+export interface ComboDeal {
+  id: string;
+  title: string;
+  description: string;
+  activities: string[]; // Activity IDs
+  totalOriginalPrice: number;
+  comboPrice: number;
+  savings: number;
+  savingsPercent: number;
+  image: string;
+  duration: string;
+  highlights: string[];
+  bestFor: string[];
+  validUntil: string;
+  popular?: boolean;
+}
+
+export const comboDeals: ComboDeal[] = [
+  {
+    id: "dubai-essentials",
+    title: "Dubai Essentials Combo",
+    description: "Experience the must-see icons of Dubai in one incredible package. Perfect for first-time visitors who want to see the best of the city.",
+    activities: ["burj-khalifa-at-the-top", "dubai-fountain-show"],
+    totalOriginalPrice: 288,
+    comboPrice: 199,
+    savings: 89,
+    savingsPercent: 31,
+    image: burjKhalifa,
+    duration: "1 Day",
+    highlights: [
+      "World's tallest building observation deck",
+      "Iconic Dubai Fountain lake ride",
+      "Perfect Instagram-worthy moments",
+      "Flexible scheduling"
+    ],
+    bestFor: ["First-time visitors", "Couples", "Photography enthusiasts"],
+    validUntil: "2025-12-31",
+    popular: true
+  },
+  {
+    id: "ultimate-adventure",
+    title: "Ultimate Adventure Package",
+    description: "Thrill-seekers rejoice! Combine the desert's adrenaline rush with the waterpark's record-breaking slides for the ultimate Dubai adventure.",
+    activities: ["dubai-desert-safari", "atlantis-aquaventure"],
+    totalOriginalPrice: 598,
+    comboPrice: 449,
+    savings: 149,
+    savingsPercent: 25,
+    image: desertSafari,
+    duration: "2 Days",
+    highlights: [
+      "Desert dune bashing & BBQ dinner",
+      "105+ waterpark slides & attractions",
+      "Camel riding & sandboarding",
+      "Private beach access"
+    ],
+    bestFor: ["Adventure seekers", "Families with teens", "Thrill lovers"],
+    validUntil: "2025-12-31"
+  },
+  {
+    id: "luxury-dubai",
+    title: "Luxury Dubai Experience",
+    description: "Indulge in Dubai's finest experiences with a private yacht cruise and VIP access to Burj Khalifa. The ultimate luxury package.",
+    activities: ["luxury-yacht-cruise", "burj-khalifa-at-the-top"],
+    totalOriginalPrice: 638,
+    comboPrice: 449,
+    savings: 189,
+    savingsPercent: 30,
+    image: yachtTour,
+    duration: "1 Day",
+    highlights: [
+      "Private luxury yacht charter",
+      "Burj Khalifa sunset slot",
+      "Welcome champagne on yacht",
+      "Priority access, skip the queues"
+    ],
+    bestFor: ["Couples", "Honeymoons", "Special occasions"],
+    validUntil: "2025-12-31",
+    popular: true
+  },
+  {
+    id: "family-fun",
+    title: "Family Fun Bundle",
+    description: "Create unforgettable family memories with this perfect combination of entertainment, adventure, and magical experiences.",
+    activities: ["atlantis-aquaventure", "dubai-fountain-show", "burj-khalifa-at-the-top"],
+    totalOriginalPrice: 537,
+    comboPrice: 399,
+    savings: 138,
+    savingsPercent: 26,
+    image: atlantisPalm,
+    duration: "2 Days",
+    highlights: [
+      "Full day at Aquaventure waterpark",
+      "Views from world's tallest building",
+      "Magical fountain show experience",
+      "Activities for all ages"
+    ],
+    bestFor: ["Families with kids", "Multi-generational trips", "Fun seekers"],
+    validUntil: "2025-12-31"
+  },
+  {
+    id: "complete-dubai",
+    title: "Complete Dubai Discovery",
+    description: "The ultimate Dubai experience package. See everything from the desert to the skyline to the sea. Miss nothing!",
+    activities: ["burj-khalifa-at-the-top", "dubai-desert-safari", "luxury-yacht-cruise", "dubai-fountain-show"],
+    totalOriginalPrice: 986,
+    comboPrice: 699,
+    savings: 287,
+    savingsPercent: 29,
+    image: yachtTour,
+    duration: "3 Days",
+    highlights: [
+      "4 iconic experiences in one package",
+      "Desert, sea, and sky adventures",
+      "Flexible multi-day scheduling",
+      "Concierge booking service included"
+    ],
+    bestFor: ["Extended stays", "Bucket list travelers", "Experience seekers"],
+    validUntil: "2025-12-31",
+    popular: true
   }
 ];
 
@@ -247,4 +376,14 @@ export const categories = [
 
 export const getActivityById = (id: string): Activity | undefined => {
   return activities.find(activity => activity.id === id);
+};
+
+export const getComboById = (id: string): ComboDeal | undefined => {
+  return comboDeals.find(combo => combo.id === id);
+};
+
+export const getActivitiesForCombo = (combo: ComboDeal): Activity[] => {
+  return combo.activities
+    .map(id => getActivityById(id))
+    .filter((activity): activity is Activity => activity !== undefined);
 };
