@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Tours from "./pages/Tours";
 import ActivityDetail from "./pages/ActivityDetail";
+import ComboDeals from "./pages/ComboDeals";
+import ComboDetail from "./pages/ComboDetail";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
@@ -21,6 +23,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/tours" element={<Tours />} />
           <Route path="/activity/:id" element={<ActivityDetail />} />
+          <Route path="/combo-deals" element={<ComboDeals />} />
+          <Route path="/combo/:id" element={<ComboDetail />} />
           <Route path="/contact" element={<Contact />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

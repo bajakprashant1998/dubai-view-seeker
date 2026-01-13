@@ -1,16 +1,15 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { format } from "date-fns";
 import {
   Clock,
   MapPin,
   Zap,
   Star,
   Calendar,
-  Users,
   Check,
   X,
-  ChevronLeft,
   ChevronRight,
   Minus,
   Plus,
@@ -27,17 +26,20 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { getActivityById, activities } from "@/data/activities";
 import { ActivityCard } from "@/components/ActivityCard";
+import { cn } from "@/lib/utils";
 
 const ActivityDetail = () => {
   const { id } = useParams();
   const activity = getActivityById(id || "");
   
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   if (!activity) {
     return (
@@ -63,6 +65,14 @@ const ActivityDetail = () => {
 
   const totalPrice = activity.price * adults + activity.price * 0.5 * children;
   const relatedActivities = activities.filter(a => a.id !== activity.id && a.category === activity.category).slice(0, 3);
+
+  const formatTimeSlot = (time: string) => {
+    const [hours, minutes] = time.split(":");
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+    return `${displayHour}:${minutes} ${ampm}`;
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -341,17 +351,59 @@ const ActivityDetail = () => {
                     )}
                   </div>
 
-                  {/* Date Selector Placeholder */}
+                  {/* Date Picker */}
                   <div>
                     <label className="text-sm font-medium mb-2 block">Select Date</label>
-                    <button className="w-full flex items-center justify-between p-4 rounded-xl border border-border bg-background hover:border-gold transition-colors">
-                      <div className="flex items-center gap-3">
-                        <Calendar className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-muted-foreground">Choose a date</span>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    </button>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="w-full flex items-center justify-between p-4 rounded-xl border border-border bg-background hover:border-gold transition-colors text-left">
+                          <div className="flex items-center gap-3">
+                            <Calendar className="h-5 w-5 text-muted-foreground" />
+                            <span className={selectedDate ? "text-foreground" : "text-muted-foreground"}>
+                              {selectedDate ? format(selectedDate, "PPP") : "Choose a date"}
+                            </span>
+                          </div>
+                          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={(date) => {
+                            setSelectedDate(date);
+                            setSelectedTime(null);
+                          }}
+                          disabled={(date) => date < new Date()}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
+
+                  {/* Time Slots */}
+                  {selectedDate && activity.timeSlots && activity.timeSlots.length > 0 && (
+                    <div>
+                      <label className="text-sm font-medium mb-3 block">Select Time Slot</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {activity.timeSlots.map((time) => (
+                          <button
+                            key={time}
+                            onClick={() => setSelectedTime(time)}
+                            className={cn(
+                              "px-3 py-2.5 rounded-lg text-sm font-medium transition-all border",
+                              selectedTime === time
+                                ? "bg-gold text-ocean-dark border-gold"
+                                : "border-border bg-background hover:border-gold text-foreground"
+                            )}
+                          >
+                            {formatTimeSlot(time)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Guests */}
                   <div className="space-y-4">
@@ -404,15 +456,32 @@ const ActivityDetail = () => {
                     </div>
                   </div>
 
+                  {/* Booking Summary */}
+                  {selectedDate && selectedTime && (
+                    <div className="p-4 bg-gold/5 rounded-xl border border-gold/20">
+                      <h4 className="font-semibold text-sm mb-2">Booking Summary</h4>
+                      <div className="space-y-1 text-sm text-muted-foreground">
+                        <p>📅 {format(selectedDate, "EEEE, MMMM d, yyyy")}</p>
+                        <p>🕐 {formatTimeSlot(selectedTime)}</p>
+                        <p>👥 {adults} Adult{adults > 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}</p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Total */}
                   <div className="pt-4 border-t border-border">
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-lg font-semibold">Total</span>
                       <span className="text-2xl font-bold">AED {totalPrice.toFixed(0)}</span>
                     </div>
-                    <Button variant="gold" size="xl" className="w-full">
+                    <Button 
+                      variant="gold" 
+                      size="xl" 
+                      className="w-full"
+                      disabled={!selectedDate || !selectedTime}
+                    >
                       <ShoppingCart className="h-5 w-5 mr-2" />
-                      Add to Cart
+                      {!selectedDate ? "Select a Date" : !selectedTime ? "Select a Time" : "Add to Cart"}
                     </Button>
                   </div>
 
