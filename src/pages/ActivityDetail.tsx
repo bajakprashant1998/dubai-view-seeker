@@ -30,7 +30,48 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { getActivityById, activities } from "@/data/activities";
 import { ActivityCard } from "@/components/ActivityCard";
+import { useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+function AddToCartButton({ activity, selectedDate, selectedTime, adults, children: childCount, totalPrice }: {
+  activity: { id: string; title: string; image: string; price: number; originalPrice?: number };
+  selectedDate: Date | undefined;
+  selectedTime: string | null;
+  adults: number;
+  children: number;
+  totalPrice: number;
+}) {
+  const { addItem } = useCart();
+  const formatTime = (time: string) => {
+    const [h, m] = time.split(":");
+    const hr = parseInt(h);
+    return `${hr > 12 ? hr - 12 : hr || 12}:${m} ${hr >= 12 ? "PM" : "AM"}`;
+  };
+  const handleAdd = () => {
+    if (!selectedDate || !selectedTime) return;
+    addItem({
+      id: activity.id,
+      type: "activity",
+      title: activity.title,
+      image: activity.image,
+      price: activity.price,
+      originalPrice: activity.originalPrice,
+      date: format(selectedDate, "MMM d, yyyy"),
+      time: formatTime(selectedTime),
+      adults,
+      children: childCount,
+      totalPrice,
+    });
+    toast.success(`${activity.title} added to cart!`);
+  };
+  return (
+    <Button variant="gold" size="xl" className="w-full" disabled={!selectedDate || !selectedTime} onClick={handleAdd}>
+      <ShoppingCart className="h-5 w-5 mr-2" />
+      {!selectedDate ? "Select a Date" : !selectedTime ? "Select a Time" : "Add to Cart"}
+    </Button>
+  );
+}
 
 const ActivityDetail = () => {
   const { id } = useParams();
@@ -474,15 +515,14 @@ const ActivityDetail = () => {
                       <span className="text-lg font-semibold">Total</span>
                       <span className="text-2xl font-bold">AED {totalPrice.toFixed(0)}</span>
                     </div>
-                    <Button 
-                      variant="gold" 
-                      size="xl" 
-                      className="w-full"
-                      disabled={!selectedDate || !selectedTime}
-                    >
-                      <ShoppingCart className="h-5 w-5 mr-2" />
-                      {!selectedDate ? "Select a Date" : !selectedTime ? "Select a Time" : "Add to Cart"}
-                    </Button>
+                    <AddToCartButton
+                      activity={activity}
+                      selectedDate={selectedDate}
+                      selectedTime={selectedTime}
+                      adults={adults}
+                      children={children}
+                      totalPrice={totalPrice}
+                    />
                   </div>
 
                   {/* Trust Badges */}
