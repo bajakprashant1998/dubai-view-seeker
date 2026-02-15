@@ -9,7 +9,9 @@ import ActivityDetail from "./pages/ActivityDetail";
 import ComboDeals from "./pages/ComboDeals";
 import ComboDetail from "./pages/ComboDetail";
 import Contact from "./pages/Contact";
+import TripPlanner from "./pages/TripPlanner";
 import NotFound from "./pages/NotFound";
+import { AIChatWidget } from "./components/AIChatWidget";
 
 const queryClient = new QueryClient();
 
@@ -26,9 +28,11 @@ const App = () => (
           <Route path="/combo-deals" element={<ComboDeals />} />
           <Route path="/combo/:id" element={<ComboDetail />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/trip-planner" element={<TripPlanner />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <AIChatWidget />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -1,0 +1,4 @@
+project_id = "fkhrhwwiwxscdeqxrncz"
+
+[functions.ai-booking-assistant]
+verify_jwt = false
