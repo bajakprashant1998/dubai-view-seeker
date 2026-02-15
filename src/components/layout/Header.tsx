@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Phone, Mail, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CartDrawer } from "@/components/CartDrawer";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -95,10 +96,11 @@ export function Header() {
               ))}
             </div>
 
-            {/* CTA Button */}
+            {/* Cart & CTA */}
             <div className="hidden lg:flex items-center gap-4">
-              <Button variant="gold" size="lg">
-                Book Now
+              <CartDrawer />
+              <Button variant="gold" size="lg" asChild>
+                <Link to="/tours">Book Now</Link>
               </Button>
             </div>
 

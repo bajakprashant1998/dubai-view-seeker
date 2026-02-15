@@ -26,11 +26,14 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { getComboById, getActivitiesForCombo, comboDeals } from "@/data/activities";
 import { ComboCard } from "@/components/ComboCard";
+import { useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const ComboDetail = () => {
   const { id } = useParams();
   const combo = getComboById(id || "");
+  const { addItem } = useCart();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
@@ -314,9 +317,30 @@ const ComboDetail = () => {
                       <span className="text-lg font-semibold">Total</span>
                       <span className="text-2xl font-bold">AED {totalPrice.toFixed(0)}</span>
                     </div>
-                    <Button variant="gold" size="xl" className="w-full">
+                    <Button
+                      variant="gold"
+                      size="xl"
+                      className="w-full"
+                      onClick={() => {
+                        if (!selectedDate) return;
+                        addItem({
+                          id: combo.id,
+                          type: "combo",
+                          title: combo.title,
+                          image: combo.image,
+                          price: combo.comboPrice,
+                          originalPrice: combo.totalOriginalPrice,
+                          date: format(selectedDate, "MMM d, yyyy"),
+                          adults,
+                          children,
+                          totalPrice,
+                        });
+                        toast.success(`${combo.title} added to cart!`);
+                      }}
+                      disabled={!selectedDate}
+                    >
                       <ShoppingCart className="h-5 w-5 mr-2" />
-                      Book Combo Deal
+                      {!selectedDate ? "Select a Date" : "Add to Cart"}
                     </Button>
                   </div>
 
