@@ -9,6 +9,7 @@ const navLinks = [
   { name: "Home", href: "/" },
   { name: "Tours", href: "/tours" },
   { name: "Combo Deals", href: "/combo-deals" },
+  { name: "AI Trip Planner", href: "/trip-planner" },
   { name: "Contact", href: "/contact" },
 ];
 
