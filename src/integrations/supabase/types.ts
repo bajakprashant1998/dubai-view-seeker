@@ -14,16 +14,231 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tours: {
+        Row: {
+          activity_timing_location: Json | null
+          additional_info: Json | null
+          adult_age_label: string | null
+          adult_price: number | null
+          adult_sale_price: number | null
+          advantage: Json | null
+          banner_image: string | null
+          booking_policy: string | null
+          cancellation_policy: string | null
+          category: string | null
+          child_age_label: string | null
+          child_policy: string | null
+          child_price: number | null
+          child_sale_price: number | null
+          created_at: string
+          dropback_time: string | null
+          duration: string | null
+          duration_unit: string | null
+          extra_fee: number | null
+          extra_fee_enabled: boolean | null
+          faqs: Json | null
+          faqs_enabled: boolean | null
+          feature_image: string | null
+          featured: boolean | null
+          gallery: string[] | null
+          id: string
+          important_info: Json | null
+          inclusions: Json | null
+          infant_age_label: string | null
+          infant_price: number | null
+          max_people: number | null
+          max_quantity: number | null
+          meta_description: string | null
+          meta_keyword: string | null
+          meta_tag: string | null
+          meta_title: string | null
+          min_people: number | null
+          min_quantity: number | null
+          operating_hours: Json | null
+          overview: string | null
+          pickup_time: string | null
+          pricing_type: string | null
+          private_transfer_price: number | null
+          service_fee: number | null
+          service_fee_enabled: boolean | null
+          sharing_transfer_price: number | null
+          slug: string | null
+          status: string
+          title: string
+          updated_at: string
+          why_go: Json | null
+          youtube_link: string | null
+        }
+        Insert: {
+          activity_timing_location?: Json | null
+          additional_info?: Json | null
+          adult_age_label?: string | null
+          adult_price?: number | null
+          adult_sale_price?: number | null
+          advantage?: Json | null
+          banner_image?: string | null
+          booking_policy?: string | null
+          cancellation_policy?: string | null
+          category?: string | null
+          child_age_label?: string | null
+          child_policy?: string | null
+          child_price?: number | null
+          child_sale_price?: number | null
+          created_at?: string
+          dropback_time?: string | null
+          duration?: string | null
+          duration_unit?: string | null
+          extra_fee?: number | null
+          extra_fee_enabled?: boolean | null
+          faqs?: Json | null
+          faqs_enabled?: boolean | null
+          feature_image?: string | null
+          featured?: boolean | null
+          gallery?: string[] | null
+          id?: string
+          important_info?: Json | null
+          inclusions?: Json | null
+          infant_age_label?: string | null
+          infant_price?: number | null
+          max_people?: number | null
+          max_quantity?: number | null
+          meta_description?: string | null
+          meta_keyword?: string | null
+          meta_tag?: string | null
+          meta_title?: string | null
+          min_people?: number | null
+          min_quantity?: number | null
+          operating_hours?: Json | null
+          overview?: string | null
+          pickup_time?: string | null
+          pricing_type?: string | null
+          private_transfer_price?: number | null
+          service_fee?: number | null
+          service_fee_enabled?: boolean | null
+          sharing_transfer_price?: number | null
+          slug?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          why_go?: Json | null
+          youtube_link?: string | null
+        }
+        Update: {
+          activity_timing_location?: Json | null
+          additional_info?: Json | null
+          adult_age_label?: string | null
+          adult_price?: number | null
+          adult_sale_price?: number | null
+          advantage?: Json | null
+          banner_image?: string | null
+          booking_policy?: string | null
+          cancellation_policy?: string | null
+          category?: string | null
+          child_age_label?: string | null
+          child_policy?: string | null
+          child_price?: number | null
+          child_sale_price?: number | null
+          created_at?: string
+          dropback_time?: string | null
+          duration?: string | null
+          duration_unit?: string | null
+          extra_fee?: number | null
+          extra_fee_enabled?: boolean | null
+          faqs?: Json | null
+          faqs_enabled?: boolean | null
+          feature_image?: string | null
+          featured?: boolean | null
+          gallery?: string[] | null
+          id?: string
+          important_info?: Json | null
+          inclusions?: Json | null
+          infant_age_label?: string | null
+          infant_price?: number | null
+          max_people?: number | null
+          max_quantity?: number | null
+          meta_description?: string | null
+          meta_keyword?: string | null
+          meta_tag?: string | null
+          meta_title?: string | null
+          min_people?: number | null
+          min_quantity?: number | null
+          operating_hours?: Json | null
+          overview?: string | null
+          pickup_time?: string | null
+          pricing_type?: string | null
+          private_transfer_price?: number | null
+          service_fee?: number | null
+          service_fee_enabled?: boolean | null
+          sharing_transfer_price?: number | null
+          slug?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          why_go?: Json | null
+          youtube_link?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +365,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const

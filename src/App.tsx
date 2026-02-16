@@ -14,6 +14,11 @@ import TripPlanner from "./pages/TripPlanner";
 import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 import { AIChatWidget } from "./components/AIChatWidget";
+import AdminLogin from "./pages/AdminLogin";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminTours from "./pages/admin/AdminTours";
+import TourForm from "./pages/admin/TourForm";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +38,16 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/trip-planner" element={<TripPlanner />} />
             <Route path="/checkout" element={<Checkout />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="tours" element={<AdminTours />} />
+              <Route path="tours/create" element={<TourForm />} />
+              <Route path="tours/edit/:id" element={<TourForm />} />
+            </Route>
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
