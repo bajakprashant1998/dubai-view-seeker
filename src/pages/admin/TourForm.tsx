@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, Trash2, Save } from "lucide-react";
+import ImageUpload, { GalleryUpload } from "@/components/admin/ImageUpload";
 
 interface ListItem {
   title: string;
@@ -83,6 +84,7 @@ const TourForm = () => {
   const [operatingHours, setOperatingHours] = useState<ListItem[]>([]);
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
   const [timingLocation, setTimingLocation] = useState<TimingItem[]>([]);
+  const [gallery, setGallery] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -139,6 +141,7 @@ const TourForm = () => {
         setOperatingHours((data.operating_hours as unknown as ListItem[]) || []);
         setFaqs((data.faqs as unknown as FaqItem[]) || []);
         setTimingLocation((data.activity_timing_location as unknown as TimingItem[]) || []);
+        setGallery((data.gallery as string[]) || []);
       });
     }
   }, [id, isEdit, navigate]);
@@ -157,6 +160,7 @@ const TourForm = () => {
       adult_price: tour.adult_price || 0,
       child_price: tour.child_price || 0,
       infant_price: tour.infant_price || 0,
+      gallery,
       inclusions: inclusions as any,
       why_go: whyGo as any,
       advantage: advantage as any,
@@ -262,14 +266,12 @@ const TourForm = () => {
           <Card>
             <CardHeader><CardTitle className="text-lg">Media</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Feature Image URL</Label>
-                <Input value={tour.feature_image} onChange={(e) => updateField("feature_image", e.target.value)} placeholder="https://..." />
-              </div>
-              <div className="space-y-2">
-                <Label>Banner Image URL</Label>
-                <Input value={tour.banner_image} onChange={(e) => updateField("banner_image", e.target.value)} placeholder="https://..." />
-              </div>
+              <ImageUpload label="Feature Image" value={tour.feature_image} onChange={(url) => updateField("feature_image", url)} folder="feature" />
+              <Separator />
+              <ImageUpload label="Banner Image" value={tour.banner_image} onChange={(url) => updateField("banner_image", url)} folder="banner" />
+              <Separator />
+              <GalleryUpload images={gallery} onChange={setGallery} />
+              <Separator />
               <div className="space-y-2">
                 <Label>YouTube Link</Label>
                 <Input value={tour.youtube_link} onChange={(e) => updateField("youtube_link", e.target.value)} placeholder="https://youtube.com/..." />
