@@ -3,23 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import {
-  Clock,
-  MapPin,
-  Zap,
-  Star,
-  Calendar,
-  Check,
-  X,
-  ChevronRight,
-  Minus,
-  Plus,
-  ShoppingCart,
-  Heart,
-  Share2,
-  Shirt,
-  Baby,
-  Sun,
-  Shield,
+  Clock, MapPin, Zap, Star, Calendar, Check, X, ChevronRight,
+  Minus, Plus, ShoppingCart, Heart, Share2, Shirt, Baby, Sun, Shield,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -28,11 +13,13 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { getActivityById, activities } from "@/data/activities";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ActivityCard } from "@/components/ActivityCard";
 import { useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useTour, mapTourToActivity, useMergedActivities } from "@/hooks/use-tours";
+import { getActivityById } from "@/data/activities";
 
 function AddToCartButton({ activity, selectedDate, selectedTime, adults, children: childCount, totalPrice }: {
   activity: { id: string; title: string; image: string; price: number; originalPrice?: number };
@@ -75,12 +62,32 @@ function AddToCartButton({ activity, selectedDate, selectedTime, adults, childre
 
 const ActivityDetail = () => {
   const { id } = useParams();
-  const activity = getActivityById(id || "");
-  
+  const { data: dbTour, isLoading } = useTour(id || "");
+  const { activities: allActivities } = useMergedActivities();
+
+  // Try DB first, then static fallback
+  const activity = dbTour
+    ? mapTourToActivity(dbTour)
+    : getActivityById(id || "");
+
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <Skeleton className="h-[400px] rounded-2xl mb-8" />
+          <Skeleton className="h-8 w-1/2 mb-4" />
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!activity) {
     return (
@@ -88,12 +95,8 @@ const ActivityDetail = () => {
         <Header />
         <div className="container mx-auto px-4 py-20 text-center">
           <h1 className="font-serif text-3xl font-bold mb-4">Activity Not Found</h1>
-          <p className="text-muted-foreground mb-8">
-            The activity you're looking for doesn't exist.
-          </p>
-          <Link to="/tours">
-            <Button variant="gold">Browse All Tours</Button>
-          </Link>
+          <p className="text-muted-foreground mb-8">The activity you're looking for doesn't exist.</p>
+          <Link to="/tours"><Button variant="gold">Browse All Tours</Button></Link>
         </div>
         <Footer />
       </div>
@@ -105,20 +108,26 @@ const ActivityDetail = () => {
     : 0;
 
   const totalPrice = activity.price * adults + activity.price * 0.5 * children;
-  const relatedActivities = activities.filter(a => a.id !== activity.id && a.category === activity.category).slice(0, 3);
+  const relatedActivities = allActivities
+    .filter(a => a.id !== activity.id && a.category === activity.category)
+    .slice(0, 3);
 
   const formatTimeSlot = (time: string) => {
     const [hours, minutes] = time.split(":");
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? "PM" : "AM";
     const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-    return `${displayHour}:${minutes} ${ampm}`;
+    return `${displayHour}:${minutes || "00"} ${ampm}`;
   };
+
+  // Get gallery from DB tour if available
+  const dbTourData = (activity as any)?._dbTour;
+  const gallery: string[] = dbTourData?.gallery || [];
+  const faqs: { question: string; answer: string }[] = dbTourData?.faqs_enabled && Array.isArray(dbTourData?.faqs) ? dbTourData.faqs : [];
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-
       <main>
         {/* Breadcrumb */}
         <div className="bg-muted/50 border-b border-border">
@@ -137,117 +146,75 @@ const ActivityDetail = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
-              {/* Image Gallery */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="relative rounded-2xl overflow-hidden aspect-[16/10]"
-              >
-                <img
-                  src={activity.image}
-                  alt={activity.title}
-                  className="w-full h-full object-cover"
-                />
-                
-                {/* Tags */}
+              {/* Image */}
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative rounded-2xl overflow-hidden aspect-[16/10]">
+                <img src={activity.image} alt={activity.title} className="w-full h-full object-cover" />
                 <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                   {discount > 0 && (
-                    <Badge className="bg-gold text-ocean-dark font-semibold text-base px-4 py-1">
-                      {discount}% OFF
-                    </Badge>
+                    <Badge className="bg-gold text-ocean-dark font-semibold text-base px-4 py-1">{discount}% OFF</Badge>
                   )}
                   {activity.instantConfirmation && (
                     <Badge variant="secondary" className="bg-card/90 text-foreground">
-                      <Zap className="h-4 w-4 mr-1" />
-                      Instant Confirmation
+                      <Zap className="h-4 w-4 mr-1" />Instant Confirmation
                     </Badge>
                   )}
                 </div>
-
-                {/* Actions */}
                 <div className="absolute top-4 right-4 flex gap-2">
-                  <button className="w-10 h-10 rounded-full bg-card/90 flex items-center justify-center hover:bg-card transition-colors">
-                    <Heart className="h-5 w-5" />
-                  </button>
-                  <button className="w-10 h-10 rounded-full bg-card/90 flex items-center justify-center hover:bg-card transition-colors">
-                    <Share2 className="h-5 w-5" />
-                  </button>
+                  <button className="w-10 h-10 rounded-full bg-card/90 flex items-center justify-center hover:bg-card transition-colors"><Heart className="h-5 w-5" /></button>
+                  <button className="w-10 h-10 rounded-full bg-card/90 flex items-center justify-center hover:bg-card transition-colors"><Share2 className="h-5 w-5" /></button>
                 </div>
               </motion.div>
+
+              {/* Gallery */}
+              {gallery.length > 0 && (
+                <div className="grid grid-cols-4 gap-2">
+                  {gallery.slice(0, 4).map((img, i) => (
+                    <div key={i} className="aspect-[4/3] rounded-xl overflow-hidden">
+                      <img src={img} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Title & Quick Info */}
               <div>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {activity.tags.map((tag) => (
-                    <Badge key={tag} variant="outline" className="text-sm">
-                      {tag}
-                    </Badge>
+                    <Badge key={tag} variant="outline" className="text-sm">{tag}</Badge>
                   ))}
                 </div>
-                
-                <h1 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
-                  {activity.title}
-                </h1>
+                <h1 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">{activity.title}</h1>
 
-                {/* Rating */}
                 <div className="flex items-center gap-4 mb-6">
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1">
                       {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-5 w-5 ${
-                            i < Math.floor(activity.rating)
-                              ? "text-gold fill-gold"
-                              : "text-muted"
-                          }`}
-                        />
+                        <Star key={i} className={`h-5 w-5 ${i < Math.floor(activity.rating) ? "text-gold fill-gold" : "text-muted"}`} />
                       ))}
                     </div>
                     <span className="font-semibold">{activity.rating}</span>
-                    <span className="text-muted-foreground">
-                      ({activity.reviewCount.toLocaleString()} reviews)
-                    </span>
+                    {activity.reviewCount > 0 && (
+                      <span className="text-muted-foreground">({activity.reviewCount.toLocaleString()} reviews)</span>
+                    )}
                   </div>
                 </div>
 
-                {/* Key Info Bar */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-xl">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
-                      <Clock className="h-5 w-5 text-gold" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Duration</p>
-                      <p className="font-semibold text-sm">{activity.duration}</p>
-                    </div>
+                    <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center"><Clock className="h-5 w-5 text-gold" /></div>
+                    <div><p className="text-xs text-muted-foreground">Duration</p><p className="font-semibold text-sm">{activity.duration}</p></div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
-                      <MapPin className="h-5 w-5 text-gold" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Location</p>
-                      <p className="font-semibold text-sm">{activity.location}</p>
-                    </div>
+                    <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center"><MapPin className="h-5 w-5 text-gold" /></div>
+                    <div><p className="text-xs text-muted-foreground">Location</p><p className="font-semibold text-sm">{activity.location}</p></div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
-                      <Calendar className="h-5 w-5 text-gold" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Hours</p>
-                      <p className="font-semibold text-sm">{activity.openingHours}</p>
-                    </div>
+                    <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center"><Calendar className="h-5 w-5 text-gold" /></div>
+                    <div><p className="text-xs text-muted-foreground">Hours</p><p className="font-semibold text-sm">{activity.openingHours}</p></div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
-                      <Zap className="h-5 w-5 text-gold" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Confirmation</p>
-                      <p className="font-semibold text-sm">Instant</p>
-                    </div>
+                    <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center"><Zap className="h-5 w-5 text-gold" /></div>
+                    <div><p className="text-xs text-muted-foreground">Confirmation</p><p className="font-semibold text-sm">Instant</p></div>
                   </div>
                 </div>
               </div>
@@ -255,13 +222,13 @@ const ActivityDetail = () => {
               {/* Tabs */}
               <Tabs defaultValue="overview" className="w-full">
                 <TabsList className="w-full justify-start border-b border-border rounded-none bg-transparent h-auto p-0 gap-8">
-                  {["overview", "inclusions", "details"].map((tab) => (
+                  {["overview", "inclusions", "details", ...(faqs.length > 0 ? ["faqs"] : [])].map((tab) => (
                     <TabsTrigger
                       key={tab}
                       value={tab}
                       className="capitalize rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:bg-transparent data-[state=active]:shadow-none pb-4 px-0"
                     >
-                      {tab === "overview" ? "What to Expect" : tab}
+                      {tab === "overview" ? "What to Expect" : tab === "faqs" ? "FAQs" : tab}
                     </TabsTrigger>
                   ))}
                 </TabsList>
@@ -269,95 +236,85 @@ const ActivityDetail = () => {
                 <TabsContent value="overview" className="pt-6 space-y-6">
                   <div>
                     <h3 className="font-serif text-xl font-bold mb-4">About This Experience</h3>
-                    <p className="text-muted-foreground leading-relaxed">
-                      {activity.description}
-                    </p>
+                    <p className="text-muted-foreground leading-relaxed">{activity.description}</p>
                   </div>
-
-                  <div>
-                    <h3 className="font-serif text-xl font-bold mb-4">What to Expect</h3>
-                    <ul className="space-y-3">
-                      {activity.whatToExpect.map((item, index) => (
-                        <li key={index} className="flex items-start gap-3">
-                          <div className="w-6 h-6 rounded-full bg-gold/10 flex items-center justify-center shrink-0 mt-0.5">
-                            <Check className="h-4 w-4 text-gold" />
-                          </div>
-                          <span className="text-muted-foreground">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="p-6 bg-gold/5 rounded-xl border border-gold/20">
-                    <div className="flex items-center gap-3 mb-3">
-                      <Sun className="h-5 w-5 text-gold" />
-                      <h4 className="font-semibold">Best Time to Visit</h4>
+                  {activity.whatToExpect.length > 0 && (
+                    <div>
+                      <h3 className="font-serif text-xl font-bold mb-4">What to Expect</h3>
+                      <ul className="space-y-3">
+                        {activity.whatToExpect.map((item, index) => (
+                          <li key={index} className="flex items-start gap-3">
+                            <div className="w-6 h-6 rounded-full bg-gold/10 flex items-center justify-center shrink-0 mt-0.5"><Check className="h-4 w-4 text-gold" /></div>
+                            <span className="text-muted-foreground">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <p className="text-muted-foreground">{activity.bestTime}</p>
-                  </div>
+                  )}
+                  {activity.bestTime && (
+                    <div className="p-6 bg-gold/5 rounded-xl border border-gold/20">
+                      <div className="flex items-center gap-3 mb-3"><Sun className="h-5 w-5 text-gold" /><h4 className="font-semibold">Best Time to Visit</h4></div>
+                      <p className="text-muted-foreground">{activity.bestTime}</p>
+                    </div>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="inclusions" className="pt-6">
                   <div className="grid md:grid-cols-2 gap-8">
-                    <div>
-                      <h3 className="font-serif text-xl font-bold mb-4 flex items-center gap-2">
-                        <Check className="h-5 w-5 text-green-500" />
-                        Inclusions
-                      </h3>
-                      <ul className="space-y-3">
-                        {activity.inclusions.map((item, index) => (
-                          <li key={index} className="flex items-start gap-3">
-                            <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                            <span className="text-muted-foreground">{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div>
-                      <h3 className="font-serif text-xl font-bold mb-4 flex items-center gap-2">
-                        <X className="h-5 w-5 text-destructive" />
-                        Exclusions
-                      </h3>
-                      <ul className="space-y-3">
-                        {activity.exclusions.map((item, index) => (
-                          <li key={index} className="flex items-start gap-3">
-                            <X className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                            <span className="text-muted-foreground">{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                    {activity.inclusions.length > 0 && (
+                      <div>
+                        <h3 className="font-serif text-xl font-bold mb-4 flex items-center gap-2"><Check className="h-5 w-5 text-green-500" />Inclusions</h3>
+                        <ul className="space-y-3">
+                          {activity.inclusions.map((item, index) => (
+                            <li key={index} className="flex items-start gap-3"><Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" /><span className="text-muted-foreground">{item}</span></li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {activity.exclusions.length > 0 && (
+                      <div>
+                        <h3 className="font-serif text-xl font-bold mb-4 flex items-center gap-2"><X className="h-5 w-5 text-destructive" />Exclusions</h3>
+                        <ul className="space-y-3">
+                          {activity.exclusions.map((item, index) => (
+                            <li key={index} className="flex items-start gap-3"><X className="h-5 w-5 text-destructive shrink-0 mt-0.5" /><span className="text-muted-foreground">{item}</span></li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 </TabsContent>
 
                 <TabsContent value="details" className="pt-6 space-y-6">
                   <div className="grid gap-4">
-                    <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-xl">
-                      <Shirt className="h-6 w-6 text-gold shrink-0" />
-                      <div>
-                        <h4 className="font-semibold mb-1">Dress Code</h4>
-                        <p className="text-muted-foreground text-sm">{activity.dressCode}</p>
+                    {activity.dressCode && (
+                      <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-xl">
+                        <Shirt className="h-6 w-6 text-gold shrink-0" />
+                        <div><h4 className="font-semibold mb-1">Dress Code</h4><p className="text-muted-foreground text-sm">{activity.dressCode}</p></div>
                       </div>
-                    </div>
-
-                    <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-xl">
-                      <Baby className="h-6 w-6 text-gold shrink-0" />
-                      <div>
-                        <h4 className="font-semibold mb-1">Age Requirements</h4>
-                        <p className="text-muted-foreground text-sm">{activity.ageRequirements}</p>
+                    )}
+                    {activity.ageRequirements && (
+                      <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-xl">
+                        <Baby className="h-6 w-6 text-gold shrink-0" />
+                        <div><h4 className="font-semibold mb-1">Age Requirements</h4><p className="text-muted-foreground text-sm">{activity.ageRequirements}</p></div>
                       </div>
-                    </div>
-
+                    )}
                     <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-xl">
                       <Shield className="h-6 w-6 text-gold shrink-0" />
-                      <div>
-                        <h4 className="font-semibold mb-1">Cancellation Policy</h4>
-                        <p className="text-muted-foreground text-sm">{activity.cancellationPolicy}</p>
-                      </div>
+                      <div><h4 className="font-semibold mb-1">Cancellation Policy</h4><p className="text-muted-foreground text-sm">{activity.cancellationPolicy}</p></div>
                     </div>
                   </div>
                 </TabsContent>
+
+                {faqs.length > 0 && (
+                  <TabsContent value="faqs" className="pt-6 space-y-4">
+                    {faqs.map((faq, i) => (
+                      <div key={i} className="p-4 bg-muted/50 rounded-xl">
+                        <h4 className="font-semibold mb-2">{faq.question}</h4>
+                        <p className="text-muted-foreground text-sm">{faq.answer}</p>
+                      </div>
+                    ))}
+                  </TabsContent>
+                )}
               </Tabs>
             </div>
 
@@ -369,30 +326,18 @@ const ActivityDetail = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-card rounded-2xl shadow-elevated border border-border p-6 space-y-6"
                 >
-                  {/* Price */}
                   <div className="flex items-end justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">From</p>
                       <div className="flex items-baseline gap-2">
-                        {activity.originalPrice && (
-                          <span className="text-lg text-muted-foreground line-through">
-                            AED {activity.originalPrice}
-                          </span>
-                        )}
-                        <span className="text-3xl font-bold text-foreground">
-                          AED {activity.price}
-                        </span>
+                        {activity.originalPrice && <span className="text-lg text-muted-foreground line-through">AED {activity.originalPrice}</span>}
+                        <span className="text-3xl font-bold text-foreground">AED {activity.price}</span>
                       </div>
                       <p className="text-sm text-muted-foreground">per person</p>
                     </div>
-                    {discount > 0 && (
-                      <Badge className="bg-gold text-ocean-dark font-semibold">
-                        Save {discount}%
-                      </Badge>
-                    )}
+                    {discount > 0 && <Badge className="bg-gold text-ocean-dark font-semibold">Save {discount}%</Badge>}
                   </div>
 
-                  {/* Date Picker */}
                   <div>
                     <label className="text-sm font-medium mb-2 block">Select Date</label>
                     <Popover>
@@ -411,10 +356,7 @@ const ActivityDetail = () => {
                         <CalendarComponent
                           mode="single"
                           selected={selectedDate}
-                          onSelect={(date) => {
-                            setSelectedDate(date);
-                            setSelectedTime(null);
-                          }}
+                          onSelect={(date) => { setSelectedDate(date); setSelectedTime(null); }}
                           disabled={(date) => date < new Date()}
                           initialFocus
                           className={cn("p-3 pointer-events-auto")}
@@ -423,7 +365,6 @@ const ActivityDetail = () => {
                     </Popover>
                   </div>
 
-                  {/* Time Slots */}
                   {selectedDate && activity.timeSlots && activity.timeSlots.length > 0 && (
                     <div>
                       <label className="text-sm font-medium mb-3 block">Select Time Slot</label>
@@ -446,117 +387,66 @@ const ActivityDetail = () => {
                     </div>
                   )}
 
-                  {/* Guests */}
                   <div className="space-y-4">
                     <label className="text-sm font-medium block">Guests</label>
-                    
-                    {/* Adults */}
                     <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-background">
-                      <div>
-                        <p className="font-medium">Adults</p>
-                        <p className="text-sm text-muted-foreground">Age 12+</p>
-                      </div>
+                      <div><p className="font-medium">Adults</p><p className="text-sm text-muted-foreground">Age 12+</p></div>
                       <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => setAdults(Math.max(1, adults - 1))}
-                          className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:border-gold transition-colors"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </button>
+                        <button onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:border-gold transition-colors"><Minus className="h-4 w-4" /></button>
                         <span className="w-8 text-center font-semibold">{adults}</span>
-                        <button
-                          onClick={() => setAdults(Math.min(10, adults + 1))}
-                          className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:border-gold transition-colors"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </button>
+                        <button onClick={() => setAdults(Math.min(10, adults + 1))} className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:border-gold transition-colors"><Plus className="h-4 w-4" /></button>
                       </div>
                     </div>
-
-                    {/* Children */}
                     <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-background">
-                      <div>
-                        <p className="font-medium">Children</p>
-                        <p className="text-sm text-muted-foreground">Age 3-11 (50% off)</p>
-                      </div>
+                      <div><p className="font-medium">Children</p><p className="text-sm text-muted-foreground">Age 3-11 (50% off)</p></div>
                       <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => setChildren(Math.max(0, children - 1))}
-                          className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:border-gold transition-colors"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </button>
+                        <button onClick={() => setChildren(Math.max(0, children - 1))} className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:border-gold transition-colors"><Minus className="h-4 w-4" /></button>
                         <span className="w-8 text-center font-semibold">{children}</span>
-                        <button
-                          onClick={() => setChildren(Math.min(10, children + 1))}
-                          className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:border-gold transition-colors"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </button>
+                        <button onClick={() => setChildren(Math.min(10, children + 1))} className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:border-gold transition-colors"><Plus className="h-4 w-4" /></button>
                       </div>
                     </div>
                   </div>
 
-                  {/* Booking Summary */}
                   {selectedDate && selectedTime && (
                     <div className="p-4 bg-gold/5 rounded-xl border border-gold/20">
                       <h4 className="font-semibold text-sm mb-2">Booking Summary</h4>
                       <div className="space-y-1 text-sm text-muted-foreground">
                         <p>📅 {format(selectedDate, "EEEE, MMMM d, yyyy")}</p>
                         <p>🕐 {formatTimeSlot(selectedTime)}</p>
-                        <p>👥 {adults} Adult{adults > 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}</p>
+                        <p>👥 {adults} Adult{adults > 1 ? "s" : ""}{children > 0 ? `, ${children} Child${children > 1 ? "ren" : ""}` : ""}</p>
                       </div>
                     </div>
                   )}
 
-                  {/* Total */}
                   <div className="pt-4 border-t border-border">
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-lg font-semibold">Total</span>
                       <span className="text-2xl font-bold">AED {totalPrice.toFixed(0)}</span>
                     </div>
-                    <AddToCartButton
-                      activity={activity}
-                      selectedDate={selectedDate}
-                      selectedTime={selectedTime}
-                      adults={adults}
-                      children={children}
-                      totalPrice={totalPrice}
-                    />
+                    <AddToCartButton activity={activity} selectedDate={selectedDate} selectedTime={selectedTime} adults={adults} children={children} totalPrice={totalPrice} />
                   </div>
 
-                  {/* Trust Badges */}
                   <div className="flex items-center justify-center gap-4 pt-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Shield className="h-4 w-4" />
-                      <span>Secure Booking</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Zap className="h-4 w-4" />
-                      <span>Instant Confirm</span>
-                    </div>
+                    <div className="flex items-center gap-1"><Shield className="h-4 w-4" /><span>Secure Booking</span></div>
+                    <div className="flex items-center gap-1"><Zap className="h-4 w-4" /><span>Instant Confirm</span></div>
                   </div>
                 </motion.div>
               </div>
             </div>
           </div>
 
-          {/* Related Activities */}
           {relatedActivities.length > 0 && (
             <section className="mt-16">
-              <h2 className="font-serif text-2xl font-bold mb-8">
-                Similar Experiences
-              </h2>
+              <h2 className="font-serif text-2xl font-bold mb-8">Similar Experiences</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {relatedActivities.map((activity) => (
-                  <ActivityCard key={activity.id} activity={activity} />
+                {relatedActivities.map((a) => (
+                  <ActivityCard key={a.id} activity={a} />
                 ))}
               </div>
             </section>
           )}
         </div>
       </main>
-
       <Footer />
     </div>
   );

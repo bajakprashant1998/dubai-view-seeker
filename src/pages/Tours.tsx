@@ -8,7 +8,9 @@ import { ActivityCard } from "@/components/ActivityCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { activities, categories } from "@/data/activities";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useMergedActivities } from "@/hooks/use-tours";
+import { categories as staticCategories } from "@/data/activities";
 
 const sortOptions = [
   { value: "popular", label: "Most Popular" },
@@ -29,20 +31,25 @@ const Tours = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const { activities, isLoading } = useMergedActivities();
   
   const selectedCategory = searchParams.get("category") || "All";
   const selectedSort = searchParams.get("sort") || "popular";
   const selectedPrice = searchParams.get("price") || "all";
 
+  // Derive categories from DB data or use static
+  const categories = useMemo(() => {
+    const cats = new Set(activities.map(a => a.category));
+    return ["All", ...Array.from(cats)];
+  }, [activities]);
+
   const filteredActivities = useMemo(() => {
     let result = [...activities];
 
-    // Category filter
     if (selectedCategory !== "All") {
       result = result.filter(a => a.category === selectedCategory);
     }
 
-    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
@@ -53,7 +60,6 @@ const Tours = () => {
       );
     }
 
-    // Price filter
     if (selectedPrice !== "all") {
       const [min, max] = selectedPrice.split("-").map(Number);
       result = result.filter(a => {
@@ -62,7 +68,6 @@ const Tours = () => {
       });
     }
 
-    // Sorting
     switch (selectedSort) {
       case "price-low":
         result.sort((a, b) => a.price - b.price);
@@ -78,7 +83,7 @@ const Tours = () => {
     }
 
     return result;
-  }, [selectedCategory, selectedSort, selectedPrice, searchQuery]);
+  }, [activities, selectedCategory, selectedSort, selectedPrice, searchQuery]);
 
   const updateFilter = (key: string, value: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -118,7 +123,6 @@ const Tours = () => {
           <div className="container mx-auto px-4">
             {/* Search & Filter Bar */}
             <div className="flex flex-col lg:flex-row gap-4 mb-8">
-              {/* Search */}
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
@@ -130,7 +134,6 @@ const Tours = () => {
                 />
               </div>
 
-              {/* Sort Dropdown */}
               <div className="relative">
                 <select
                   value={selectedSort}
@@ -146,7 +149,6 @@ const Tours = () => {
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
               </div>
 
-              {/* Filter Toggle (Mobile) */}
               <Button
                 variant="outline"
                 size="lg"
@@ -165,7 +167,6 @@ const Tours = () => {
                   showFilters ? "block" : "hidden lg:block"
                 }`}
               >
-                {/* Categories */}
                 <div className="bg-card rounded-xl p-6 shadow-card border border-border">
                   <h3 className="font-serif font-bold text-lg mb-4">Categories</h3>
                   <div className="space-y-2">
@@ -185,7 +186,6 @@ const Tours = () => {
                   </div>
                 </div>
 
-                {/* Price Range */}
                 <div className="bg-card rounded-xl p-6 shadow-card border border-border">
                   <h3 className="font-serif font-bold text-lg mb-4">Price Range</h3>
                   <div className="space-y-2">
@@ -208,7 +208,6 @@ const Tours = () => {
 
               {/* Results Grid */}
               <div className="flex-1">
-                {/* Active Filters */}
                 {(selectedCategory !== "All" || selectedPrice !== "all" || searchQuery) && (
                   <div className="flex flex-wrap gap-2 mb-6">
                     {selectedCategory !== "All" && (
@@ -244,13 +243,17 @@ const Tours = () => {
                   </div>
                 )}
 
-                {/* Results Count */}
                 <p className="text-muted-foreground mb-6">
                   Showing <span className="font-semibold text-foreground">{filteredActivities.length}</span> experiences
                 </p>
 
-                {/* Grid */}
-                {filteredActivities.length > 0 ? (
+                {isLoading ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {[...Array(6)].map((_, i) => (
+                      <Skeleton key={i} className="h-[380px] rounded-2xl" />
+                    ))}
+                  </div>
+                ) : filteredActivities.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                     {filteredActivities.map((activity, index) => (
                       <motion.div
