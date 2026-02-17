@@ -3,10 +3,20 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ActivityCard } from "@/components/ActivityCard";
-import { activities } from "@/data/activities";
+import { useMergedActivities, useFeaturedTours, mapTourToActivity } from "@/hooks/use-tours";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function FeaturedActivities() {
-  const featuredActivities = activities.slice(0, 4);
+  const { data: featuredDbTours, isLoading: featuredLoading } = useFeaturedTours();
+  const { activities: allActivities, isLoading: allLoading } = useMergedActivities();
+
+  // Use featured DB tours if available, otherwise first 4 from merged list
+  const featuredActivities =
+    featuredDbTours && featuredDbTours.length > 0
+      ? featuredDbTours.map(mapTourToActivity)
+      : allActivities.slice(0, 4);
+
+  const isLoading = featuredLoading || allLoading;
 
   return (
     <section className="py-20">
@@ -34,19 +44,27 @@ export function FeaturedActivities() {
           </Link>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredActivities.map((activity, index) => (
-            <motion.div
-              key={activity.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              <ActivityCard activity={activity} />
-            </motion.div>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-[380px] rounded-2xl" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {featuredActivities.map((activity, index) => (
+              <motion.div
+                key={activity.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <ActivityCard activity={activity} />
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
