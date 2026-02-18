@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link, Outlet, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, Map, LogOut, Menu, X, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Map, Sparkles, LogOut, Menu, X, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/admin" },
   { label: "Tours", icon: Map, path: "/admin/tours" },
+  { label: "Combo Deals", icon: Sparkles, path: "/admin/combos" },
 ];
 
 const AdminLayout = () => {
