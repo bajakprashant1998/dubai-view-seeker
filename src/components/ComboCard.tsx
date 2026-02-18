@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import { Clock, Star, Users, Sparkles, ArrowRight, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ComboDeal, getActivitiesForCombo } from "@/data/activities";
+import { ComboDeal, getActivitiesForCombo, getActivityById } from "@/data/activities";
+import { useMergedActivities } from "@/hooks/use-tours";
 import { cn } from "@/lib/utils";
 
 interface ComboCardProps {
@@ -12,7 +13,15 @@ interface ComboCardProps {
 }
 
 export function ComboCard({ combo, index = 0 }: ComboCardProps) {
-  const includedActivities = getActivitiesForCombo(combo);
+  const { activities: allActivities } = useMergedActivities();
+
+  // Resolve included activities from merged list (DB + static fallback)
+  const includedActivities = combo.activities
+    .map((actId) =>
+      allActivities.find((a) => a.id === actId || (a as any)._dbTour?.id === actId || (a as any)._dbTour?.slug === actId) ||
+      getActivityById(actId)
+    )
+    .filter(Boolean);
 
   return (
     <motion.div

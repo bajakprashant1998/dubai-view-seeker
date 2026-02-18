@@ -22,21 +22,67 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { getComboById, getActivitiesForCombo, comboDeals } from "@/data/activities";
+import { getComboById, getActivitiesForCombo } from "@/data/activities";
 import { ComboCard } from "@/components/ComboCard";
 import { useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useComboDeal, useMergedComboDeals, useComboActivities } from "@/hooks/use-combos";
+import { useMergedActivities } from "@/hooks/use-tours";
+import type { ComboDeal } from "@/data/activities";
+
+function mapDbComboToComboDeal(row: any): ComboDeal {
+  return {
+    id: row.slug || row.id,
+    title: row.title,
+    description: row.description || "",
+    activities: row.tour_ids,
+    totalOriginalPrice: Number(row.total_original_price),
+    comboPrice: Number(row.combo_price),
+    savings: Number(row.savings),
+    savingsPercent: row.savings_percent,
+    image: row.image || "/placeholder.svg",
+    duration: row.duration || "",
+    highlights: row.highlights || [],
+    bestFor: row.best_for || [],
+    validUntil: row.valid_until || "",
+    popular: row.popular ?? false,
+  };
+}
 
 const ComboDetail = () => {
   const { id } = useParams();
-  const combo = getComboById(id || "");
+  const { data: dbCombo, isLoading: isLoadingDb } = useComboDeal(id || "");
+  const { activities: allActivities } = useMergedActivities();
+  const { comboDeals: allCombos } = useMergedComboDeals();
   const { addItem } = useCart();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
+
+  // Resolve combo: DB first, then static fallback
+  const combo: ComboDeal | undefined = dbCombo
+    ? mapDbComboToComboDeal(dbCombo)
+    : getComboById(id || "");
+
+  const includedActivities = useComboActivities(combo, allActivities);
+
+  if (isLoadingDb) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8 space-y-6">
+          <Skeleton className="h-[400px] rounded-2xl" />
+          <Skeleton className="h-8 w-1/2" />
+          <Skeleton className="h-20 w-full" />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!combo) {
     return (
@@ -56,9 +102,8 @@ const ComboDetail = () => {
     );
   }
 
-  const includedActivities = getActivitiesForCombo(combo);
   const totalPrice = combo.comboPrice * adults + combo.comboPrice * 0.5 * children;
-  const otherCombos = comboDeals.filter(c => c.id !== combo.id).slice(0, 2);
+  const otherCombos = allCombos.filter((c) => c.id !== combo.id).slice(0, 2);
 
   return (
     <div className="min-h-screen bg-background">
@@ -130,83 +175,89 @@ const ComboDetail = () => {
               </div>
 
               {/* Highlights */}
-              <div className="bg-gold/5 rounded-2xl p-6 border border-gold/20">
-                <h2 className="font-serif text-xl font-bold mb-4 flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-gold" />
-                  Package Highlights
-                </h2>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {combo.highlights.map((highlight, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                      <Check className="h-5 w-5 text-gold shrink-0 mt-0.5" />
-                      <span className="text-foreground">{highlight}</span>
-                    </div>
-                  ))}
+              {combo.highlights.length > 0 && (
+                <div className="bg-gold/5 rounded-2xl p-6 border border-gold/20">
+                  <h2 className="font-serif text-xl font-bold mb-4 flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-gold" />
+                    Package Highlights
+                  </h2>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {combo.highlights.map((highlight, index) => (
+                      <div key={index} className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-gold shrink-0 mt-0.5" />
+                        <span className="text-foreground">{highlight}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Included Activities */}
-              <div>
-                <h2 className="font-serif text-2xl font-bold mb-6">
-                  What's Included
-                </h2>
-                <div className="space-y-4">
-                  {includedActivities.map((activity, index) => (
-                    <Link
-                      key={activity.id}
-                      to={`/activity/${activity.id}`}
-                      className="group flex gap-4 p-4 bg-card rounded-xl border border-border hover:border-gold/30 transition-all"
-                    >
-                      <div className="relative w-32 h-24 rounded-lg overflow-hidden shrink-0">
-                        <img
-                          src={activity.image}
-                          alt={activity.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform"
-                        />
-                        <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-gold flex items-center justify-center">
-                          <span className="text-ocean-dark font-bold text-sm">{index + 1}</span>
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-foreground group-hover:text-gold transition-colors mb-1">
-                          {activity.title}
-                        </h3>
-                        <p className="text-muted-foreground text-sm line-clamp-2 mb-2">
-                          {activity.shortDescription}
-                        </p>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            {activity.duration}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-4 w-4" />
-                            {activity.location}
-                          </div>
-                          <div className="flex items-center gap-1 text-gold">
-                            <Star className="h-4 w-4 fill-gold" />
-                            {activity.rating}
+              {includedActivities.length > 0 && (
+                <div>
+                  <h2 className="font-serif text-2xl font-bold mb-6">
+                    What's Included
+                  </h2>
+                  <div className="space-y-4">
+                    {includedActivities.map((activity, index) => (
+                      <Link
+                        key={activity.id}
+                        to={`/activity/${activity.id}`}
+                        className="group flex gap-4 p-4 bg-card rounded-xl border border-border hover:border-gold/30 transition-all"
+                      >
+                        <div className="relative w-32 h-24 rounded-lg overflow-hidden shrink-0">
+                          <img
+                            src={activity.image}
+                            alt={activity.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                          />
+                          <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-gold flex items-center justify-center">
+                            <span className="text-ocean-dark font-bold text-sm">{index + 1}</span>
                           </div>
                         </div>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-gold transition-colors shrink-0 self-center" />
-                    </Link>
-                  ))}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-foreground group-hover:text-gold transition-colors mb-1">
+                            {activity.title}
+                          </h3>
+                          <p className="text-muted-foreground text-sm line-clamp-2 mb-2">
+                            {activity.shortDescription}
+                          </p>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              {activity.duration}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-4 w-4" />
+                              {activity.location}
+                            </div>
+                            <div className="flex items-center gap-1 text-gold">
+                              <Star className="h-4 w-4 fill-gold" />
+                              {activity.rating}
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-gold transition-colors shrink-0 self-center" />
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Best For */}
-              <div>
-                <h2 className="font-serif text-xl font-bold mb-4">Perfect For</h2>
-                <div className="flex flex-wrap gap-3">
-                  {combo.bestFor.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="px-4 py-2 text-sm">
-                      <Users className="h-4 w-4 mr-2" />
-                      {tag}
-                    </Badge>
-                  ))}
+              {combo.bestFor.length > 0 && (
+                <div>
+                  <h2 className="font-serif text-xl font-bold mb-4">Perfect For</h2>
+                  <div className="flex flex-wrap gap-3">
+                    {combo.bestFor.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="px-4 py-2 text-sm">
+                        <Users className="h-4 w-4 mr-2" />
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Booking Widget */}

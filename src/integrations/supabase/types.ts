@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      combo_deals: {
+        Row: {
+          best_for: string[] | null
+          combo_price: number
+          created_at: string
+          description: string | null
+          duration: string | null
+          highlights: string[] | null
+          id: string
+          image: string | null
+          popular: boolean | null
+          savings: number
+          savings_percent: number
+          slug: string | null
+          status: string
+          title: string
+          total_original_price: number
+          tour_ids: string[]
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          best_for?: string[] | null
+          combo_price?: number
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          highlights?: string[] | null
+          id?: string
+          image?: string | null
+          popular?: boolean | null
+          savings?: number
+          savings_percent?: number
+          slug?: string | null
+          status?: string
+          title: string
+          total_original_price?: number
+          tour_ids?: string[]
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          best_for?: string[] | null
+          combo_price?: number
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          highlights?: string[] | null
+          id?: string
+          image?: string | null
+          popular?: boolean | null
+          savings?: number
+          savings_percent?: number
+          slug?: string | null
+          status?: string
+          title?: string
+          total_original_price?: number
+          tour_ids?: string[]
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
