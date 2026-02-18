@@ -3,6 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/home/Hero";
 import { WhyChooseUs } from "@/components/home/WhyChooseUs";
 import { FeaturedActivities } from "@/components/home/FeaturedActivities";
+import { FeaturedCombos } from "@/components/home/FeaturedCombos";
 import { Newsletter } from "@/components/home/Newsletter";
 
 const Index = () => {
@@ -12,6 +13,7 @@ const Index = () => {
       <main>
         <Hero />
         <FeaturedActivities />
+        <FeaturedCombos />
         <WhyChooseUs />
         <Newsletter />
       </main>
