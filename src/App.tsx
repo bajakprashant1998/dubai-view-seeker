@@ -19,6 +19,8 @@ import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminTours from "./pages/admin/AdminTours";
 import TourForm from "./pages/admin/TourForm";
+import AdminCombos from "./pages/admin/AdminCombos";
+import ComboForm from "./pages/admin/ComboForm";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +48,9 @@ const App = () => (
               <Route path="tours" element={<AdminTours />} />
               <Route path="tours/create" element={<TourForm />} />
               <Route path="tours/edit/:id" element={<TourForm />} />
+              <Route path="combos" element={<AdminCombos />} />
+              <Route path="combos/create" element={<ComboForm />} />
+              <Route path="combos/edit/:id" element={<ComboForm />} />
             </Route>
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
