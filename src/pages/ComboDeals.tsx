@@ -5,7 +5,8 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ComboCard } from "@/components/ComboCard";
 import { Badge } from "@/components/ui/badge";
-import { comboDeals } from "@/data/activities";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useMergedComboDeals } from "@/hooks/use-combos";
 
 const filterOptions = [
   { value: "all", label: "All Combos" },
@@ -16,6 +17,7 @@ const filterOptions = [
 
 const ComboDeals = () => {
   const [activeFilter, setActiveFilter] = useState("all");
+  const { comboDeals, isLoading } = useMergedComboDeals();
 
   const filteredDeals = comboDeals.filter((combo) => {
     if (activeFilter === "all") return true;
@@ -32,7 +34,6 @@ const ComboDeals = () => {
       <main>
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-ocean to-ocean-dark py-20 overflow-hidden">
-          {/* Background Pattern */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-0 left-0 w-96 h-96 bg-gold rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
             <div className="absolute bottom-0 right-0 w-96 h-96 bg-gold rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
@@ -58,7 +59,6 @@ const ComboDeals = () => {
                 Handcrafted packages designed for every type of traveler.
               </p>
 
-              {/* Stats */}
               <div className="flex flex-wrap justify-center gap-8">
                 {[
                   { value: "30%", label: "Max Savings" },
@@ -78,7 +78,6 @@ const ComboDeals = () => {
         {/* Deals Section */}
         <section className="py-16">
           <div className="container mx-auto px-4">
-            {/* Filters */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -101,19 +100,25 @@ const ComboDeals = () => {
               ))}
             </motion.div>
 
-            {/* Results Count */}
             <p className="text-muted-foreground mb-8">
               Showing <span className="font-semibold text-foreground">{filteredDeals.length}</span> combo deals
             </p>
 
-            {/* Deals Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredDeals.map((combo, index) => (
-                <ComboCard key={combo.id} combo={combo} index={index} />
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-[460px] rounded-2xl" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredDeals.map((combo, index) => (
+                  <ComboCard key={combo.id} combo={combo} index={index} />
+                ))}
+              </div>
+            )}
 
-            {filteredDeals.length === 0 && (
+            {!isLoading && filteredDeals.length === 0 && (
               <div className="text-center py-16">
                 <p className="text-muted-foreground text-lg">
                   No combo deals found matching your filter.
