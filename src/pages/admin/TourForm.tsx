@@ -69,6 +69,20 @@ const defaultTour = {
   meta_keyword: "",
   meta_description: "",
   meta_tag: "",
+  // New fields
+  meeting_point: "",
+  map_link: "",
+  guide_type: "live",
+  tour_type: "group",
+  difficulty_level: "easy",
+  accessibility_info: "",
+  dress_code: "",
+  seasonal_availability: "",
+  confirmation_type: "instant",
+  voucher_type: "mobile",
+  min_age: null as number | null,
+  wheelchair_accessible: false,
+  max_group_size: null as number | null,
 };
 
 const TourForm = () => {
@@ -84,6 +98,11 @@ const TourForm = () => {
   const [operatingHours, setOperatingHours] = useState<ListItem[]>([]);
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
   const [timingLocation, setTimingLocation] = useState<TimingItem[]>([]);
+  const [exclusions, setExclusions] = useState<ListItem[]>([]);
+  const [whatToBring, setWhatToBring] = useState<ListItem[]>([]);
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [availableDays, setAvailableDays] = useState<string[]>([]);
+  const [blackoutDates, setBlackoutDates] = useState<string[]>([]);
   const [gallery, setGallery] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -132,8 +151,26 @@ const TourForm = () => {
           meta_keyword: data.meta_keyword || "",
           meta_description: data.meta_description || "",
           meta_tag: data.meta_tag || "",
+          meeting_point: (data as any).meeting_point || "",
+          map_link: (data as any).map_link || "",
+          guide_type: (data as any).guide_type || "live",
+          tour_type: (data as any).tour_type || "group",
+          difficulty_level: (data as any).difficulty_level || "easy",
+          accessibility_info: (data as any).accessibility_info || "",
+          dress_code: (data as any).dress_code || "",
+          seasonal_availability: (data as any).seasonal_availability || "",
+          confirmation_type: (data as any).confirmation_type || "instant",
+          voucher_type: (data as any).voucher_type || "mobile",
+          min_age: (data as any).min_age ?? null,
+          wheelchair_accessible: (data as any).wheelchair_accessible || false,
+          max_group_size: (data as any).max_group_size ?? null,
         });
         setInclusions((data.inclusions as unknown as ListItem[]) || []);
+        setExclusions(((data as any).exclusions as unknown as ListItem[]) || []);
+        setWhatToBring(((data as any).what_to_bring as unknown as ListItem[]) || []);
+        setLanguages(((data as any).languages as string[]) || []);
+        setAvailableDays(((data as any).available_days as string[]) || []);
+        setBlackoutDates(((data as any).blackout_dates as string[]) || []);
         setWhyGo((data.why_go as unknown as ListItem[]) || []);
         setAdvantage((data.advantage as unknown as ListItem[]) || []);
         setImportantInfo((data.important_info as unknown as ListItem[]) || []);
@@ -162,6 +199,11 @@ const TourForm = () => {
       infant_price: tour.infant_price || 0,
       gallery,
       inclusions: inclusions as any,
+      exclusions: exclusions as any,
+      what_to_bring: whatToBring as any,
+      languages,
+      available_days: availableDays,
+      blackout_dates: blackoutDates,
       why_go: whyGo as any,
       advantage: advantage as any,
       important_info: importantInfo as any,
@@ -218,8 +260,11 @@ const TourForm = () => {
           <TabsTrigger value="content">Content</TabsTrigger>
           <TabsTrigger value="pricing">Pricing</TabsTrigger>
           <TabsTrigger value="settings">Tour Settings</TabsTrigger>
+          <TabsTrigger value="location">Location & Guide</TabsTrigger>
+          <TabsTrigger value="details">Tour Details</TabsTrigger>
           <TabsTrigger value="information">Information</TabsTrigger>
           <TabsTrigger value="policies">Policies</TabsTrigger>
+          <TabsTrigger value="availability">Availability</TabsTrigger>
           <TabsTrigger value="faqs">FAQs</TabsTrigger>
           <TabsTrigger value="seo">SEO</TabsTrigger>
         </TabsList>
@@ -442,11 +487,163 @@ const TourForm = () => {
           </Card>
         </TabsContent>
 
+        {/* Location & Guide Tab */}
+        <TabsContent value="location" className="space-y-4">
+          <Card>
+            <CardHeader><CardTitle className="text-lg">Meeting Point</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Meeting Point / Pickup Location</Label>
+                <Textarea value={tour.meeting_point} onChange={(e) => updateField("meeting_point", e.target.value)} placeholder="e.g. Hotel lobby, Dubai Mall entrance..." rows={3} />
+              </div>
+              <div className="space-y-2">
+                <Label>Google Maps Link</Label>
+                <Input value={tour.map_link} onChange={(e) => updateField("map_link", e.target.value)} placeholder="https://maps.google.com/..." />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle className="text-lg">Guide & Language</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Guide Type</Label>
+                <Select value={tour.guide_type} onValueChange={(v) => updateField("guide_type", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="live">Live Guide</SelectItem>
+                    <SelectItem value="audio">Audio Guide</SelectItem>
+                    <SelectItem value="self-guided">Self-Guided</SelectItem>
+                    <SelectItem value="none">No Guide</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Languages Available</Label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {languages.map((lang, i) => (
+                    <span key={i} className="inline-flex items-center gap-1 px-2 py-1 bg-muted rounded text-sm">
+                      {lang}
+                      <button type="button" onClick={() => setLanguages(languages.filter((_, j) => j !== i))} className="text-destructive hover:text-destructive/80">×</button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Input id="new-lang" placeholder="e.g. English" onKeyDown={(e) => {
+                    if (e.key === "Enter") { e.preventDefault(); const v = (e.target as HTMLInputElement).value.trim(); if (v && !languages.includes(v)) { setLanguages([...languages, v]); (e.target as HTMLInputElement).value = ""; } }
+                  }} />
+                  <Button type="button" variant="outline" size="sm" onClick={() => {
+                    const el = document.getElementById("new-lang") as HTMLInputElement; const v = el?.value.trim(); if (v && !languages.includes(v)) { setLanguages([...languages, v]); el.value = ""; }
+                  }}><Plus className="w-4 h-4" /></Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tour Details Tab */}
+        <TabsContent value="details" className="space-y-4">
+          <Card>
+            <CardHeader><CardTitle className="text-lg">Tour Type & Difficulty</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Tour Type</Label>
+                  <Select value={tour.tour_type} onValueChange={(v) => updateField("tour_type", v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="group">Group Tour</SelectItem>
+                      <SelectItem value="private">Private Tour</SelectItem>
+                      <SelectItem value="self-guided">Self-Guided</SelectItem>
+                      <SelectItem value="shared">Shared Tour</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Difficulty Level</Label>
+                  <Select value={tour.difficulty_level} onValueChange={(v) => updateField("difficulty_level", v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="easy">Easy</SelectItem>
+                      <SelectItem value="moderate">Moderate</SelectItem>
+                      <SelectItem value="challenging">Challenging</SelectItem>
+                      <SelectItem value="extreme">Extreme</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle className="text-lg">Confirmation & Voucher</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Confirmation Type</Label>
+                  <Select value={tour.confirmation_type} onValueChange={(v) => updateField("confirmation_type", v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="instant">Instant Confirmation</SelectItem>
+                      <SelectItem value="manual">Manual Confirmation</SelectItem>
+                      <SelectItem value="within_24h">Within 24 Hours</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Voucher Type</Label>
+                  <Select value={tour.voucher_type} onValueChange={(v) => updateField("voucher_type", v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mobile">Mobile Voucher</SelectItem>
+                      <SelectItem value="printed">Printed Voucher</SelectItem>
+                      <SelectItem value="both">Both</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle className="text-lg">Accessibility & Requirements</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Minimum Age</Label>
+                  <Input type="number" value={tour.min_age ?? ""} onChange={(e) => updateField("min_age", e.target.value ? Number(e.target.value) : null)} placeholder="No minimum" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Max Group Size</Label>
+                  <Input type="number" value={tour.max_group_size ?? ""} onChange={(e) => updateField("max_group_size", e.target.value ? Number(e.target.value) : null)} placeholder="No limit" />
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch checked={tour.wheelchair_accessible} onCheckedChange={(v) => updateField("wheelchair_accessible", v)} />
+                <Label>Wheelchair Accessible</Label>
+              </div>
+              <div className="space-y-2">
+                <Label>Accessibility Information</Label>
+                <Textarea value={tour.accessibility_info} onChange={(e) => updateField("accessibility_info", e.target.value)} placeholder="Details about accessibility..." rows={3} />
+              </div>
+              <div className="space-y-2">
+                <Label>Dress Code</Label>
+                <Input value={tour.dress_code} onChange={(e) => updateField("dress_code", e.target.value)} placeholder="e.g. Smart casual, covered shoulders..." />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle className="text-lg">What to Bring</CardTitle></CardHeader>
+            <CardContent>
+              <ListEditor items={whatToBring} setItems={setWhatToBring} label="Items to Bring" />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Information Tab */}
         <TabsContent value="information" className="space-y-4">
           <Card>
             <CardContent className="pt-6 space-y-6">
               <ListEditor items={inclusions} setItems={setInclusions} label="Inclusions" />
+              <Separator />
+              <ListEditor items={exclusions} setItems={setExclusions} label="Exclusions" />
               <Separator />
               <ListEditor items={whyGo} setItems={setWhyGo} label="Why Should I Go For This?" />
               <Separator />
@@ -481,7 +678,46 @@ const TourForm = () => {
           </Card>
         </TabsContent>
 
-        {/* FAQs Tab */}
+        {/* Availability Tab */}
+        <TabsContent value="availability" className="space-y-4">
+          <Card>
+            <CardHeader><CardTitle className="text-lg">Available Days</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+                  <Button key={day} type="button" variant={availableDays.includes(day) ? "default" : "outline"} size="sm"
+                    onClick={() => setAvailableDays(availableDays.includes(day) ? availableDays.filter(d => d !== day) : [...availableDays, day])}>
+                    {day}
+                  </Button>
+                ))}
+              </div>
+              <div className="space-y-2">
+                <Label>Seasonal Availability</Label>
+                <Input value={tour.seasonal_availability} onChange={(e) => updateField("seasonal_availability", e.target.value)} placeholder="e.g. October to April, Summer only..." />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle className="text-lg">Blackout Dates</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex flex-wrap gap-2 mb-2">
+                {blackoutDates.map((d, i) => (
+                  <span key={i} className="inline-flex items-center gap-1 px-2 py-1 bg-muted rounded text-sm">
+                    {d}
+                    <button type="button" onClick={() => setBlackoutDates(blackoutDates.filter((_, j) => j !== i))} className="text-destructive hover:text-destructive/80">×</button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input id="new-blackout" type="date" />
+                <Button type="button" variant="outline" size="sm" onClick={() => {
+                  const el = document.getElementById("new-blackout") as HTMLInputElement; const v = el?.value; if (v && !blackoutDates.includes(v)) { setBlackoutDates([...blackoutDates, v]); el.value = ""; }
+                }}><Plus className="w-4 h-4 mr-1" /> Add</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="faqs" className="space-y-4">
           <Card>
             <CardHeader>
