@@ -106,13 +106,16 @@ export type Database = {
       }
       tours: {
         Row: {
+          accessibility_info: string | null
           activity_timing_location: Json | null
           additional_info: Json | null
           adult_age_label: string | null
           adult_price: number | null
           adult_sale_price: number | null
           advantage: Json | null
+          available_days: string[] | null
           banner_image: string | null
+          blackout_dates: string[] | null
           booking_policy: string | null
           cancellation_policy: string | null
           category: string | null
@@ -120,10 +123,14 @@ export type Database = {
           child_policy: string | null
           child_price: number | null
           child_sale_price: number | null
+          confirmation_type: string | null
           created_at: string
+          difficulty_level: string | null
+          dress_code: string | null
           dropback_time: string | null
           duration: string | null
           duration_unit: string | null
+          exclusions: Json | null
           extra_fee: number | null
           extra_fee_enabled: boolean | null
           faqs: Json | null
@@ -131,17 +138,23 @@ export type Database = {
           feature_image: string | null
           featured: boolean | null
           gallery: string[] | null
+          guide_type: string | null
           id: string
           important_info: Json | null
           inclusions: Json | null
           infant_age_label: string | null
           infant_price: number | null
+          languages: string[] | null
+          map_link: string | null
+          max_group_size: number | null
           max_people: number | null
           max_quantity: number | null
+          meeting_point: string | null
           meta_description: string | null
           meta_keyword: string | null
           meta_tag: string | null
           meta_title: string | null
+          min_age: number | null
           min_people: number | null
           min_quantity: number | null
           operating_hours: Json | null
@@ -149,24 +162,32 @@ export type Database = {
           pickup_time: string | null
           pricing_type: string | null
           private_transfer_price: number | null
+          seasonal_availability: string | null
           service_fee: number | null
           service_fee_enabled: boolean | null
           sharing_transfer_price: number | null
           slug: string | null
           status: string
           title: string
+          tour_type: string | null
           updated_at: string
+          voucher_type: string | null
+          what_to_bring: Json | null
+          wheelchair_accessible: boolean | null
           why_go: Json | null
           youtube_link: string | null
         }
         Insert: {
+          accessibility_info?: string | null
           activity_timing_location?: Json | null
           additional_info?: Json | null
           adult_age_label?: string | null
           adult_price?: number | null
           adult_sale_price?: number | null
           advantage?: Json | null
+          available_days?: string[] | null
           banner_image?: string | null
+          blackout_dates?: string[] | null
           booking_policy?: string | null
           cancellation_policy?: string | null
           category?: string | null
@@ -174,10 +195,14 @@ export type Database = {
           child_policy?: string | null
           child_price?: number | null
           child_sale_price?: number | null
+          confirmation_type?: string | null
           created_at?: string
+          difficulty_level?: string | null
+          dress_code?: string | null
           dropback_time?: string | null
           duration?: string | null
           duration_unit?: string | null
+          exclusions?: Json | null
           extra_fee?: number | null
           extra_fee_enabled?: boolean | null
           faqs?: Json | null
@@ -185,17 +210,23 @@ export type Database = {
           feature_image?: string | null
           featured?: boolean | null
           gallery?: string[] | null
+          guide_type?: string | null
           id?: string
           important_info?: Json | null
           inclusions?: Json | null
           infant_age_label?: string | null
           infant_price?: number | null
+          languages?: string[] | null
+          map_link?: string | null
+          max_group_size?: number | null
           max_people?: number | null
           max_quantity?: number | null
+          meeting_point?: string | null
           meta_description?: string | null
           meta_keyword?: string | null
           meta_tag?: string | null
           meta_title?: string | null
+          min_age?: number | null
           min_people?: number | null
           min_quantity?: number | null
           operating_hours?: Json | null
@@ -203,24 +234,32 @@ export type Database = {
           pickup_time?: string | null
           pricing_type?: string | null
           private_transfer_price?: number | null
+          seasonal_availability?: string | null
           service_fee?: number | null
           service_fee_enabled?: boolean | null
           sharing_transfer_price?: number | null
           slug?: string | null
           status?: string
           title: string
+          tour_type?: string | null
           updated_at?: string
+          voucher_type?: string | null
+          what_to_bring?: Json | null
+          wheelchair_accessible?: boolean | null
           why_go?: Json | null
           youtube_link?: string | null
         }
         Update: {
+          accessibility_info?: string | null
           activity_timing_location?: Json | null
           additional_info?: Json | null
           adult_age_label?: string | null
           adult_price?: number | null
           adult_sale_price?: number | null
           advantage?: Json | null
+          available_days?: string[] | null
           banner_image?: string | null
+          blackout_dates?: string[] | null
           booking_policy?: string | null
           cancellation_policy?: string | null
           category?: string | null
@@ -228,10 +267,14 @@ export type Database = {
           child_policy?: string | null
           child_price?: number | null
           child_sale_price?: number | null
+          confirmation_type?: string | null
           created_at?: string
+          difficulty_level?: string | null
+          dress_code?: string | null
           dropback_time?: string | null
           duration?: string | null
           duration_unit?: string | null
+          exclusions?: Json | null
           extra_fee?: number | null
           extra_fee_enabled?: boolean | null
           faqs?: Json | null
@@ -239,17 +282,23 @@ export type Database = {
           feature_image?: string | null
           featured?: boolean | null
           gallery?: string[] | null
+          guide_type?: string | null
           id?: string
           important_info?: Json | null
           inclusions?: Json | null
           infant_age_label?: string | null
           infant_price?: number | null
+          languages?: string[] | null
+          map_link?: string | null
+          max_group_size?: number | null
           max_people?: number | null
           max_quantity?: number | null
+          meeting_point?: string | null
           meta_description?: string | null
           meta_keyword?: string | null
           meta_tag?: string | null
           meta_title?: string | null
+          min_age?: number | null
           min_people?: number | null
           min_quantity?: number | null
           operating_hours?: Json | null
@@ -257,13 +306,18 @@ export type Database = {
           pickup_time?: string | null
           pricing_type?: string | null
           private_transfer_price?: number | null
+          seasonal_availability?: string | null
           service_fee?: number | null
           service_fee_enabled?: boolean | null
           sharing_transfer_price?: number | null
           slug?: string | null
           status?: string
           title?: string
+          tour_type?: string | null
           updated_at?: string
+          voucher_type?: string | null
+          what_to_bring?: Json | null
+          wheelchair_accessible?: boolean | null
           why_go?: Json | null
           youtube_link?: string | null
         }
