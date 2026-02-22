@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import {
   Clock, MapPin, Zap, Star, Calendar, Check, X, ChevronRight,
   Minus, Plus, ShoppingCart, Heart, Share2, Shirt, Baby, Sun, Shield,
+  Hotel, Waves, Car, Package, Route, AlertTriangle, Users, Globe, Map,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -124,6 +125,34 @@ const ActivityDetail = () => {
   const dbTourData = (activity as any)?._dbTour;
   const gallery: string[] = dbTourData?.gallery || [];
   const faqs: { question: string; answer: string }[] = dbTourData?.faqs_enabled && Array.isArray(dbTourData?.faqs) ? dbTourData.faqs : [];
+  
+  // New fields
+  const itinerary: { time: string; title: string; description: string }[] = Array.isArray(dbTourData?.itinerary) ? dbTourData.itinerary : [];
+  const hotelInfo = dbTourData?.hotel_info || {};
+  const hourlyRentals: { duration: string; price: number; label?: string }[] = Array.isArray(dbTourData?.hourly_rentals) ? dbTourData.hourly_rentals : [];
+  const transferOptions: { type: string; price: number; description?: string }[] = Array.isArray(dbTourData?.transfer_options) ? dbTourData.transfer_options : [];
+  const addons: { name: string; price: number; description?: string }[] = Array.isArray(dbTourData?.addons) ? dbTourData.addons : [];
+  const safetyReqs = dbTourData?.safety_requirements || {};
+  const exclusions: string[] = Array.isArray(dbTourData?.exclusions)
+    ? (dbTourData.exclusions as any[]).map((i: any) => (typeof i === "string" ? i : i.text || ""))
+    : [];
+  const meetingPoint = dbTourData?.meeting_point || "";
+  const mapLink = dbTourData?.map_link || "";
+  const languages: string[] = dbTourData?.languages || [];
+  const guideType = dbTourData?.guide_type || "";
+  const tourType = dbTourData?.tour_type || "";
+  const difficultyLevel = dbTourData?.difficulty_level || "";
+  const whatToBring: string[] = Array.isArray(dbTourData?.what_to_bring)
+    ? (dbTourData.what_to_bring as any[]).map((i: any) => (typeof i === "string" ? i : i.text || ""))
+    : [];
+
+  const hasItinerary = itinerary.length > 0;
+  const hasHotel = hotelInfo.name;
+  const hasRentals = hourlyRentals.length > 0;
+  const hasTransfers = transferOptions.length > 0;
+  const hasAddons = addons.length > 0;
+  const hasSafety = safetyReqs.health_requirements || safetyReqs.safety_briefing || safetyReqs.insurance_info || safetyReqs.waiver_needed;
+  const hasExtraDetails = meetingPoint || languages.length > 0 || tourType || difficultyLevel || whatToBring.length > 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -221,14 +250,25 @@ const ActivityDetail = () => {
 
               {/* Tabs */}
               <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="w-full justify-start border-b border-border rounded-none bg-transparent h-auto p-0 gap-8">
-                  {["overview", "inclusions", "details", ...(faqs.length > 0 ? ["faqs"] : [])].map((tab) => (
+                <TabsList className="w-full justify-start border-b border-border rounded-none bg-transparent h-auto p-0 gap-6 flex-wrap">
+                  {[
+                    "overview",
+                    "inclusions",
+                    ...(hasItinerary ? ["itinerary"] : []),
+                    ...(hasRentals ? ["rentals"] : []),
+                    ...(hasHotel ? ["hotel"] : []),
+                    ...(hasTransfers ? ["transfers"] : []),
+                    ...(hasAddons ? ["addons"] : []),
+                    "details",
+                    ...(hasSafety ? ["safety"] : []),
+                    ...(faqs.length > 0 ? ["faqs"] : []),
+                  ].map((tab) => (
                     <TabsTrigger
                       key={tab}
                       value={tab}
-                      className="capitalize rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:bg-transparent data-[state=active]:shadow-none pb-4 px-0"
+                      className="capitalize rounded-none border-b-2 border-transparent data-[state=active]:border-gold data-[state=active]:bg-transparent data-[state=active]:shadow-none pb-4 px-0 text-sm"
                     >
-                      {tab === "overview" ? "What to Expect" : tab === "faqs" ? "FAQs" : tab}
+                      {tab === "overview" ? "What to Expect" : tab === "faqs" ? "FAQs" : tab === "rentals" ? "Hourly Rentals" : tab === "addons" ? "Add-ons" : tab}
                     </TabsTrigger>
                   ))}
                 </TabsList>
@@ -271,11 +311,11 @@ const ActivityDetail = () => {
                         </ul>
                       </div>
                     )}
-                    {activity.exclusions.length > 0 && (
+                    {exclusions.length > 0 && (
                       <div>
                         <h3 className="font-serif text-xl font-bold mb-4 flex items-center gap-2"><X className="h-5 w-5 text-destructive" />Exclusions</h3>
                         <ul className="space-y-3">
-                          {activity.exclusions.map((item, index) => (
+                          {exclusions.map((item, index) => (
                             <li key={index} className="flex items-start gap-3"><X className="h-5 w-5 text-destructive shrink-0 mt-0.5" /><span className="text-muted-foreground">{item}</span></li>
                           ))}
                         </ul>
@@ -284,12 +324,165 @@ const ActivityDetail = () => {
                   </div>
                 </TabsContent>
 
+                {hasItinerary && (
+                  <TabsContent value="itinerary" className="pt-6">
+                    <h3 className="font-serif text-xl font-bold mb-6 flex items-center gap-2"><Route className="h-5 w-5 text-gold" />Itinerary</h3>
+                    <div className="relative space-y-0">
+                      {itinerary.map((step, i) => (
+                        <div key={i} className="flex gap-4 pb-6 last:pb-0">
+                          <div className="flex flex-col items-center">
+                            <div className="w-10 h-10 rounded-full bg-gold/10 border-2 border-gold flex items-center justify-center text-sm font-bold text-gold">{i + 1}</div>
+                            {i < itinerary.length - 1 && <div className="w-0.5 flex-1 bg-border mt-2" />}
+                          </div>
+                          <div className="pt-1.5 pb-2">
+                            {step.time && <span className="text-xs font-medium text-gold bg-gold/10 px-2 py-0.5 rounded-full">{step.time}</span>}
+                            <h4 className="font-semibold mt-1">{step.title}</h4>
+                            {step.description && <p className="text-muted-foreground text-sm mt-1">{step.description}</p>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                )}
+
+                {hasRentals && (
+                  <TabsContent value="rentals" className="pt-6">
+                    <h3 className="font-serif text-xl font-bold mb-6 flex items-center gap-2"><Waves className="h-5 w-5 text-gold" />Hourly Rental Options</h3>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {hourlyRentals.map((rental, i) => (
+                        <div key={i} className="p-5 rounded-xl border border-border bg-muted/30 hover:border-gold transition-colors text-center">
+                          <Clock className="h-8 w-8 text-gold mx-auto mb-3" />
+                          <p className="text-lg font-bold">{rental.duration}</p>
+                          {rental.label && <p className="text-sm text-muted-foreground mb-2">{rental.label}</p>}
+                          <p className="text-2xl font-bold text-gold">AED {rental.price}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                )}
+
+                {hasHotel && (
+                  <TabsContent value="hotel" className="pt-6">
+                    <h3 className="font-serif text-xl font-bold mb-6 flex items-center gap-2"><Hotel className="h-5 w-5 text-gold" />Hotel Information</h3>
+                    <div className="p-6 rounded-xl border border-border bg-muted/30 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-lg font-bold">{hotelInfo.name}</h4>
+                        {hotelInfo.star_rating && (
+                          <div className="flex items-center gap-1">
+                            {[...Array(Number(hotelInfo.star_rating) || 0)].map((_, i) => (
+                              <Star key={i} className="h-4 w-4 text-gold fill-gold" />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                        {hotelInfo.room_type && (
+                          <div><span className="text-muted-foreground">Room Type:</span> <span className="font-medium">{hotelInfo.room_type}</span></div>
+                        )}
+                        {hotelInfo.check_in && (
+                          <div><span className="text-muted-foreground">Check-in:</span> <span className="font-medium">{hotelInfo.check_in}</span></div>
+                        )}
+                        {hotelInfo.check_out && (
+                          <div><span className="text-muted-foreground">Check-out:</span> <span className="font-medium">{hotelInfo.check_out}</span></div>
+                        )}
+                      </div>
+                      {hotelInfo.amenities && hotelInfo.amenities.length > 0 && (
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-2">Amenities</p>
+                          <div className="flex flex-wrap gap-2">
+                            {hotelInfo.amenities.map((a: string, i: number) => (
+                              <Badge key={i} variant="outline">{a}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                )}
+
+                {hasTransfers && (
+                  <TabsContent value="transfers" className="pt-6">
+                    <h3 className="font-serif text-xl font-bold mb-6 flex items-center gap-2"><Car className="h-5 w-5 text-gold" />Transfer Options</h3>
+                    <div className="space-y-3">
+                      {transferOptions.map((t, i) => (
+                        <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30">
+                          <div>
+                            <p className="font-semibold">{t.type}</p>
+                            {t.description && <p className="text-sm text-muted-foreground">{t.description}</p>}
+                          </div>
+                          <span className="text-lg font-bold text-gold">AED {t.price}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                )}
+
+                {hasAddons && (
+                  <TabsContent value="addons" className="pt-6">
+                    <h3 className="font-serif text-xl font-bold mb-6 flex items-center gap-2"><Package className="h-5 w-5 text-gold" />Available Add-ons</h3>
+                    <div className="space-y-3">
+                      {addons.map((addon, i) => (
+                        <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30">
+                          <div>
+                            <p className="font-semibold">{addon.name}</p>
+                            {addon.description && <p className="text-sm text-muted-foreground">{addon.description}</p>}
+                          </div>
+                          <span className="text-lg font-bold text-gold">+AED {addon.price}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                )}
+
                 <TabsContent value="details" className="pt-6 space-y-6">
                   <div className="grid gap-4">
+                    {meetingPoint && (
+                      <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-xl">
+                        <Map className="h-6 w-6 text-gold shrink-0" />
+                        <div>
+                          <h4 className="font-semibold mb-1">Meeting Point</h4>
+                          <p className="text-muted-foreground text-sm">{meetingPoint}</p>
+                          {mapLink && <a href={mapLink} target="_blank" rel="noopener noreferrer" className="text-gold text-sm hover:underline mt-1 inline-block">View on Map →</a>}
+                        </div>
+                      </div>
+                    )}
+                    {languages.length > 0 && (
+                      <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-xl">
+                        <Globe className="h-6 w-6 text-gold shrink-0" />
+                        <div>
+                          <h4 className="font-semibold mb-1">Languages & Guide</h4>
+                          <p className="text-muted-foreground text-sm">{languages.join(", ")}{guideType ? ` • ${guideType} guide` : ""}</p>
+                        </div>
+                      </div>
+                    )}
+                    {(tourType || difficultyLevel) && (
+                      <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-xl">
+                        <Users className="h-6 w-6 text-gold shrink-0" />
+                        <div>
+                          <h4 className="font-semibold mb-1">Tour Details</h4>
+                          <p className="text-muted-foreground text-sm">
+                            {tourType && <span className="capitalize">{tourType} tour</span>}
+                            {tourType && difficultyLevel && " • "}
+                            {difficultyLevel && <span className="capitalize">{difficultyLevel} difficulty</span>}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                     {activity.dressCode && (
                       <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-xl">
                         <Shirt className="h-6 w-6 text-gold shrink-0" />
                         <div><h4 className="font-semibold mb-1">Dress Code</h4><p className="text-muted-foreground text-sm">{activity.dressCode}</p></div>
+                      </div>
+                    )}
+                    {whatToBring.length > 0 && (
+                      <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-xl">
+                        <Package className="h-6 w-6 text-gold shrink-0" />
+                        <div>
+                          <h4 className="font-semibold mb-1">What to Bring</h4>
+                          <ul className="text-muted-foreground text-sm space-y-1">
+                            {whatToBring.map((item, i) => <li key={i}>• {item}</li>)}
+                          </ul>
+                        </div>
                       </div>
                     )}
                     {activity.ageRequirements && (
@@ -304,6 +497,37 @@ const ActivityDetail = () => {
                     </div>
                   </div>
                 </TabsContent>
+
+                {hasSafety && (
+                  <TabsContent value="safety" className="pt-6">
+                    <h3 className="font-serif text-xl font-bold mb-6 flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-gold" />Safety & Requirements</h3>
+                    <div className="grid gap-4">
+                      {safetyReqs.health_requirements && (
+                        <div className="p-4 bg-muted/50 rounded-xl">
+                          <h4 className="font-semibold mb-1">Health Requirements</h4>
+                          <p className="text-muted-foreground text-sm">{safetyReqs.health_requirements}</p>
+                        </div>
+                      )}
+                      {safetyReqs.safety_briefing && (
+                        <div className="p-4 bg-muted/50 rounded-xl">
+                          <h4 className="font-semibold mb-1">Safety Briefing</h4>
+                          <p className="text-muted-foreground text-sm">{safetyReqs.safety_briefing}</p>
+                        </div>
+                      )}
+                      {safetyReqs.insurance_info && (
+                        <div className="p-4 bg-muted/50 rounded-xl">
+                          <h4 className="font-semibold mb-1">Insurance</h4>
+                          <p className="text-muted-foreground text-sm">{safetyReqs.insurance_info}</p>
+                        </div>
+                      )}
+                      {safetyReqs.waiver_needed && (
+                        <div className="p-4 bg-gold/5 rounded-xl border border-gold/20">
+                          <p className="text-sm font-medium flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-gold" />A waiver/consent form is required for this activity</p>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                )}
 
                 {faqs.length > 0 && (
                   <TabsContent value="faqs" className="pt-6 space-y-4">
