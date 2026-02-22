@@ -22,13 +22,18 @@ import { toast } from "sonner";
 import { useTour, mapTourToActivity, useMergedActivities } from "@/hooks/use-tours";
 import { getActivityById } from "@/data/activities";
 
-function AddToCartButton({ activity, selectedDate, selectedTime, adults, children: childCount, totalPrice }: {
+interface SelectedRental { duration: string; price: number; label?: string }
+interface SelectedAddon { name: string; price: number; description?: string }
+
+function AddToCartButton({ activity, selectedDate, selectedTime, adults, children: childCount, totalPrice, selectedRental, selectedAddons }: {
   activity: { id: string; title: string; image: string; price: number; originalPrice?: number };
   selectedDate: Date | undefined;
   selectedTime: string | null;
   adults: number;
   children: number;
   totalPrice: number;
+  selectedRental?: SelectedRental | null;
+  selectedAddons: SelectedAddon[];
 }) {
   const { addItem } = useCart();
   const formatTime = (time: string) => {
@@ -50,6 +55,8 @@ function AddToCartButton({ activity, selectedDate, selectedTime, adults, childre
       adults,
       children: childCount,
       totalPrice,
+      selectedRental: selectedRental ? { label: selectedRental.label || selectedRental.duration, price: selectedRental.price } : undefined,
+      selectedAddons: selectedAddons.length > 0 ? selectedAddons.map(a => ({ label: a.name, price: a.price })) : undefined,
     });
     toast.success(`${activity.title} added to cart!`);
   };
@@ -75,6 +82,8 @@ const ActivityDetail = () => {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
+  const [selectedRental, setSelectedRental] = useState<SelectedRental | null>(null);
+  const [selectedAddonsList, setSelectedAddonsList] = useState<SelectedAddon[]>([]);
 
   if (isLoading) {
     return (
@@ -108,7 +117,9 @@ const ActivityDetail = () => {
     ? Math.round(((activity.originalPrice - activity.price) / activity.originalPrice) * 100)
     : 0;
 
-  const totalPrice = activity.price * adults + activity.price * 0.5 * children;
+  const rentalExtra = selectedRental ? selectedRental.price : 0;
+  const addonsExtra = selectedAddonsList.reduce((sum, a) => sum + a.price, 0);
+  const totalPrice = activity.price * adults + activity.price * 0.5 * children + rentalExtra + addonsExtra;
   const relatedActivities = allActivities
     .filter(a => a.id !== activity.id && a.category === activity.category)
     .slice(0, 3);
@@ -638,16 +649,108 @@ const ActivityDetail = () => {
                         <p>📅 {format(selectedDate, "EEEE, MMMM d, yyyy")}</p>
                         <p>🕐 {formatTimeSlot(selectedTime)}</p>
                         <p>👥 {adults} Adult{adults > 1 ? "s" : ""}{children > 0 ? `, ${children} Child${children > 1 ? "ren" : ""}` : ""}</p>
+                        {selectedRental && <p>⏱ {selectedRental.label || selectedRental.duration} — AED {selectedRental.price}</p>}
+                        {selectedAddonsList.map((a, i) => <p key={i}>✦ {a.name} — AED {a.price}</p>)}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Hourly Rental Selection */}
+                  {hourlyRentals.length > 0 && (
+                    <div>
+                      <label className="text-sm font-medium mb-3 block">Select Duration</label>
+                      <div className="space-y-2">
+                        {hourlyRentals.map((rental, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setSelectedRental(selectedRental?.duration === rental.duration ? null : rental)}
+                            className={cn(
+                              "w-full flex items-center justify-between p-3 rounded-xl border text-sm transition-all",
+                              selectedRental?.duration === rental.duration
+                                ? "border-gold bg-gold/10"
+                                : "border-border bg-background hover:border-gold"
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">{rental.label || rental.duration}</span>
+                            </div>
+                            <span className="font-bold text-gold">+AED {rental.price}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Add-ons Selection */}
+                  {addons.length > 0 && (
+                    <div>
+                      <label className="text-sm font-medium mb-3 block">Add Extras</label>
+                      <div className="space-y-2">
+                        {addons.map((addon, i) => {
+                          const isSelected = selectedAddonsList.some(a => a.name === addon.name);
+                          return (
+                            <button
+                              key={i}
+                              onClick={() => {
+                                setSelectedAddonsList(prev =>
+                                  isSelected ? prev.filter(a => a.name !== addon.name) : [...prev, addon]
+                                );
+                              }}
+                              className={cn(
+                                "w-full flex items-center justify-between p-3 rounded-xl border text-sm transition-all",
+                                isSelected
+                                  ? "border-gold bg-gold/10"
+                                  : "border-border bg-background hover:border-gold"
+                              )}
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className={cn("w-5 h-5 rounded border flex items-center justify-center", isSelected ? "bg-gold border-gold" : "border-border")}>
+                                  {isSelected && <Check className="h-3 w-3 text-ocean-dark" />}
+                                </div>
+                                <div className="text-left">
+                                  <span className="font-medium">{addon.name}</span>
+                                  {addon.description && <p className="text-xs text-muted-foreground">{addon.description}</p>}
+                                </div>
+                              </div>
+                              <span className="font-bold text-gold">+AED {addon.price}</span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
 
                   <div className="pt-4 border-t border-border">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-lg font-semibold">Total</span>
-                      <span className="text-2xl font-bold">AED {totalPrice.toFixed(0)}</span>
+                    <div className="space-y-1 mb-4">
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                        <span>{adults} Adult{adults > 1 ? "s" : ""} × AED {activity.price}</span>
+                        <span>AED {(activity.price * adults).toFixed(0)}</span>
+                      </div>
+                      {children > 0 && (
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                          <span>{children} Child{children > 1 ? "ren" : ""} × AED {(activity.price * 0.5).toFixed(0)}</span>
+                          <span>AED {(activity.price * 0.5 * children).toFixed(0)}</span>
+                        </div>
+                      )}
+                      {selectedRental && (
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                          <span>{selectedRental.label || selectedRental.duration}</span>
+                          <span>AED {selectedRental.price}</span>
+                        </div>
+                      )}
+                      {selectedAddonsList.map((a, i) => (
+                        <div key={i} className="flex items-center justify-between text-sm text-muted-foreground">
+                          <span>{a.name}</span>
+                          <span>AED {a.price}</span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between pt-2 border-t border-border">
+                        <span className="text-lg font-semibold">Total</span>
+                        <span className="text-2xl font-bold">AED {totalPrice.toFixed(0)}</span>
+                      </div>
                     </div>
-                    <AddToCartButton activity={activity} selectedDate={selectedDate} selectedTime={selectedTime} adults={adults} children={children} totalPrice={totalPrice} />
+                    <AddToCartButton activity={activity} selectedDate={selectedDate} selectedTime={selectedTime} adults={adults} children={children} totalPrice={totalPrice} selectedRental={selectedRental} selectedAddons={selectedAddonsList} />
                   </div>
 
                   <div className="flex items-center justify-center gap-4 pt-4 text-sm text-muted-foreground">
