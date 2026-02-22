@@ -82,6 +82,12 @@ export function CartDrawer() {
                       <p className="text-xs text-muted-foreground mt-1">
                         {item.date} {item.time && `• ${item.time}`} • {item.adults}A{item.children > 0 ? ` ${item.children}C` : ""}
                       </p>
+                      {item.selectedRental && (
+                        <p className="text-xs text-muted-foreground">⏱ {item.selectedRental.label}</p>
+                      )}
+                      {item.selectedAddons && item.selectedAddons.length > 0 && (
+                        <p className="text-xs text-muted-foreground">✦ {item.selectedAddons.map(a => a.label).join(", ")}</p>
+                      )}
                       <p className="text-sm font-bold mt-1">AED {item.totalPrice.toFixed(0)}</p>
                     </div>
                   </motion.div>

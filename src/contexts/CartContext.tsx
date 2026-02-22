@@ -1,5 +1,10 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 
+export interface CartItemExtra {
+  label: string;
+  price: number;
+}
+
 export interface CartItem {
   id: string;
   type: "activity" | "combo";
@@ -12,6 +17,8 @@ export interface CartItem {
   adults: number;
   children: number;
   totalPrice: number;
+  selectedRental?: CartItemExtra;
+  selectedAddons?: CartItemExtra[];
 }
 
 interface CartContextType {
